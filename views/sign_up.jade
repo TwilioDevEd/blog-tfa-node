@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  .container
+    div
+      h1 Create an account
+      p
+        | Remember, this is just for demonstration purposes. Don't use a password
+        | here that you use anywhere else.
+
+    if opts['username_exists']
+      .alert.alert-error
+        button(type='button', class='close', data-dismiss='alert')
+          | &times;
+        That username is already in use.
+
+    if opts['passwords_do_not_match']
+      .alert.alert-error
+        button(type='button', class='close', data-dismiss='alert')
+          | &times;
+        Password do not match.
+
+    form(method='POST')
+      fieldset
+        label Username
+        input(type='text', name='username')
+        label Password
+        input(type='password', name='password1')
+        label Password again
+        input(type='password', name='password2')
+        br
+        button(type='submit', class='btn') Create Account
