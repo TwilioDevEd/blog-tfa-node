@@ -88,4 +88,20 @@ describe('sign in', function () {
         });
     });
   });
+
+  describe('sign in with correct user and password', function () {
+    it('responds with You are logged in', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(302);
+          expect(res.header.location).to.equal('/user/');
+          done();
+        });
+    });
+  });
 });

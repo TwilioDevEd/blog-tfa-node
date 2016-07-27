@@ -30,6 +30,8 @@ router.post('/', function(req, res, next) {
         if (!isValid) {
           data.opts['invalid_username_or_password'] = true;
           res.render('main_page.jade', data);
+        } else {
+          res.redirect('/user/');
         }
       });
     }
