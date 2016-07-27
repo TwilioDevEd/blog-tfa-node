@@ -82,7 +82,7 @@ describe('sign in', function () {
         })
         .end(function(err, res){
           expect(res.statusCode).to.equal(200);
-          var $ = cheerio.load(res.text); 
+          var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
           done();
         });
@@ -115,6 +115,26 @@ describe('sign in', function () {
           .end(function(err, res){
             expect(res.statusCode).to.equal(302);
             expect(res.header.location).to.equal('/verify_tfa/');
+            done();
+          });
+      });
+    });
+  });
+
+  describe('sign up', function () {
+    describe('sign up with passwords not matching', function () {
+      it('responds with "Passwords do not match" message', function (done) {
+        supertest(app)
+          .post('/sign-up/')
+          .send({
+            username: 'newuser',
+            password1: 'password',
+            password2: 'passwordddddd'
+          })
+          .end(function(err, res){
+            expect(res.statusCode).to.equal(200);
+            var $ = cheerio.load(res.text);
+            expect($('.alert.alert-error').text()).to.contain('Passwords do not match');
             done();
           });
       });
