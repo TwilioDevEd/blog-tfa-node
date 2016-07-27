@@ -71,4 +71,21 @@ describe('sign in', function () {
         });
     });
   });
+
+  describe('sign in with bad user and bad password', function () {
+    it('responds with alert Incorrect Username or Password', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'baduser',
+          password: 'badpassword'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text); 
+          expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
+          done();
+        });
+    });
+  });
 });
