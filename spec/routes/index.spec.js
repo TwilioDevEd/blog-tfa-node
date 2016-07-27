@@ -139,5 +139,22 @@ describe('sign in', function () {
           });
       });
     });
+
+    describe('sign up with correct user and password', function () {
+      it('redirects to "/user/"', function (done) {
+        supertest(app)
+          .post('/sign-up/')
+          .send({
+            username: 'newuser',
+            password1: 'password',
+            password2: 'password'
+          })
+          .end(function(err, res){
+            expect(res.statusCode).to.equal(302);
+            expect(res.header.location).to.equal('/user/');
+            done();
+          });
+      });
+    });
   });
 });
