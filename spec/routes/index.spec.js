@@ -156,5 +156,23 @@ describe('sign in', function () {
           });
       });
     });
+
+    describe('sign up with username that already exists', function () {
+      it('redirects to "/user/"', function (done) {
+        supertest(app)
+          .post('/sign-up/')
+          .send({
+            username: 'user2',
+            password1: 'password',
+            password2: 'password'
+          })
+          .end(function(err, res){
+            expect(res.statusCode).to.equal(200);
+            var $ = cheerio.load(res.text);
+            expect($('.alert.alert-error').text()).to.contain('That username is already in use');
+            done();
+          });
+      });
+    });
   });
 });
