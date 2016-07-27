@@ -38,13 +38,30 @@ describe('sign in', function () {
       });
     });
     
-  describe('test sign in with badpassword', function () {
-    it('responds with 200 OK', function (done) {
+  describe('sign in with badpassword', function () {
+    it('responds with alert Incorrect Username or Password', function (done) {
       supertest(app)
         .post('/')
         .send({
           username: 'user',
           password: 'badpassword'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text); 
+          expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
+          done();
+        });
+    });
+  });
+
+  describe('sign in with bad user', function () {
+    it('responds with alert Incorrect Username or Password', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'baduser',
+          password: 'password'
         })
         .end(function(err, res){
           expect(res.statusCode).to.equal(200);
