@@ -3,7 +3,11 @@
 var expect = require('chai').expect
   , supertest = require('supertest')
   , cheerio = require('cheerio')
-  , app = require('../../app.js');
+  , users = require('../../users-data.json')
+  , User = require('../../models/user')
+  , app = require('../../app');
+
+require('../spec-helper');
 
 describe('default route', function () {
   describe('GET /', function () {
@@ -25,10 +29,29 @@ describe('default route', function () {
 
 });
 
-// describe('main page', function () {
-//   describe('GET /', function () {
-//     it('responds with 200 OK', function (done) {
-//       supertest(app).get('/').expect(200, done);
-//     });
-//   });
-// });
+describe('sign in', function () {
+  beforeEach(function (done) {
+      User.remove({}, function() {
+        User.create(users, function(err, result) {
+          done();
+        });
+      });
+    });
+    
+  describe('test sign in with badpassword', function () {
+    it('responds with 200 OK', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'badpassword'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text); 
+          expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
+          done();
+        });
+    });
+  });
+});
