@@ -31,7 +31,15 @@ router.post('/', function(req, res, next) {
           data.opts['invalid_username_or_password'] = true;
           res.render('main_page.jade', data);
         } else {
-          res.redirect('/user/');
+          if (user['totp_enabled_via_sms'] || user['totp_enabled_via_app']) {
+            req.session.username = user.username;
+            req.session.stage = 'password-validated';
+            res.redirect('/verify_tfa/');
+          } else {
+            //do login user 
+            res.redirect('/user/');  
+          }
+          
         }
       });
     }

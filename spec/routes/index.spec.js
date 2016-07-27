@@ -103,5 +103,21 @@ describe('sign in', function () {
           done();
         });
     });
+
+    describe('sign in with tfa', function () {
+      it('responds with "Verify TFA" page', function (done) {
+        supertest(app)
+          .post('/')
+          .send({
+            username: 'user.app_no.sms_yes',
+            password: 'password'
+          })
+          .end(function(err, res){
+            expect(res.statusCode).to.equal(302);
+            expect(res.header.location).to.equal('/verify_tfa/');
+            done();
+          });
+      });
+    });
   });
 });
