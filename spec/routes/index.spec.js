@@ -367,7 +367,6 @@ describe('enable tfa via app', function() {
           .get('/enable-tfa-via-app')
           .end(function(err2, res2) {
             expect(res2.statusCode).to.equal(200);
-            var $ = cheerio.load(res2.text);
             expect(res2.text).to.contain('Install Google Authenticator');
             expect(res2.text).to.contain('Open the Google Authenticator app');
             expect(res2.text).to.contain('Tap menu, then tap "Set up account"');
@@ -376,7 +375,6 @@ describe('enable tfa via app', function() {
             expect(res2.text).to.contain('Once you have scanned the barcode, enter the 6-digit code below');
             expect(res2.text).to.contain('Submit');
             expect(res2.text).to.contain('Cancel');
-
             done();
           });
         });
@@ -404,7 +402,6 @@ describe('enable tfa via app', function() {
               expect(res2.text).to.contain('via Google Authenticator');
               done();
             });
-
           });
         });
     });
@@ -430,10 +427,37 @@ describe('enable tfa via app', function() {
               expect(res2.text).to.contain('There was an error verifying your token');
               done();
             });
-
           });
         });
     });
   });
+});
 
+describe('enable tfa via sms', function() {
+  describe('post /enable-tfa-via-sms/', function() {
+    it('shows sms instructions', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          testSession
+          .post('/enable-tfa-via-sms')
+          .send({
+            'phone_number': '+14155551212'
+          })
+          .end(function(err2, res2) {
+            expect(res2.statusCode).to.equal(200);
+            expect(res2.text).to.contain('Enter your mobile phone number');
+            expect(res2.text).to.contain('A 6-digit verification code will be sent');
+            expect(res2.text).to.contain('Enter your verification code');
+            expect(res2.text).to.contain('Submit and verify');
+            expect(res2.text).to.contain('Cancel');
+            done();
+          });
+        });
+    });
+  });
 });

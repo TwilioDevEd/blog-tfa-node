@@ -26,26 +26,22 @@ schema.statics.build = function(username, password, callback) {
 
 schema.statics.sendSms = function(username, callback) {
   this.findOne({'username': username}, function(err, user) {
-    if (user.totp_enabled_via_sms) {
-      var token = new totp.TotpAuth().generate();
-      var msg = `Use this code to log in: ${token}`;
-      twilioClient.sms.messages.create({
-        to: user.phone_number,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        body: msg
-      }, function(err, message) {
-        if (!err) {
-          callback(user, true);
-        } else {
-          console.log(`Oops! There was an error!`);
-          console.log(err);
-          callback(user, false);
-        }
-      });
-    } else {
-      callback(user, false);
-    }  
-  })
+    var token = new totp.TotpAuth().generate();
+    var msg = `Use this code to log in: ${token}`;
+    twilioClient.sms.messages.create({
+      to: user.phone_number,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      body: msg
+    }, function(err, message) {
+      if (!err) {
+        callback(user, true);
+      } else {
+        console.log(`Oops! There was an error!`);
+        console.log(err);
+        callback(user, false);
+      }
+    });
+  });
 };
 
 schema.methods.validateToken = function(token) {

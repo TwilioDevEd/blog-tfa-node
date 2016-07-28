@@ -36,6 +36,47 @@ router.get('/enable-tfa-via-app/', function(req, res, next) {
   }  
 });
 
+router.get('/enable-tfa-via-sms/', function(req, res, next) {
+  var data = buildData(req);
+  if (!data.opts.isAuthenticated) {
+    res.redirect('/');
+  } else {
+    res.render('enable_tfa_via_sms.jade', data);
+  }  
+});
+
+router.post('/enable-tfa-via-sms/', function(req, res, next) {
+  var data = buildData(req);
+  if (!data.opts.isAuthenticated) {
+    res.redirect('/');
+  } else {
+    var phoneNumber = req.body['phone_number'];
+    var token = req.body.token;
+    User.findOne({username: data.opts.user.username}, function(err, user) {
+      if (phoneNumber) {
+          user['phone_number'] = phoneNumber;
+          user.save(function(err, updatedUser) {
+            User.sendSms(user.username, function(sentSmsUser, smsSent) {
+              data.opts.user = sentSmsUser;
+              data.opts['sms_sent'] = smsSent;
+              data.opts['phone_number_updated'] = true;
+              res.render('enable_tfa_via_sms.jade', data);
+            });
+          });
+      } else if (token && user.validateToken(token)) {
+        user.totp_enabled_via_app = true;
+        User.update(user, function(err, result) {
+          data.opts.user = user;
+          res.render('enable_tfa_via_sms.jade', data);
+        });
+      } else {
+        data.opts['token_error'] = true;
+        res.render('enable_tfa_via_sms.jade', data);
+      }
+    });
+  }
+});
+
 router.post('/enable-tfa-via-app/', function(req, res, next) {
   var data = buildData(req);
   if (!data.opts.isAuthenticated) {
