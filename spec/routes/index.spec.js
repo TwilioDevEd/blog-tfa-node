@@ -9,7 +9,11 @@ mockery.registerMock('twilio', function() {
     sms: {
       messages: {
         create: function(opts, callback) {
-          callback(undefined, 'default message');
+          if (opts.to === 'FAKE') {
+            callback('error fake number', undefined);
+          } else {
+            callback(undefined, 'default message');
+          }
         }
       }
     }
@@ -434,7 +438,7 @@ describe('enable tfa via app', function() {
 });
 
 describe('enable tfa via sms', function() {
-  describe('post /enable-tfa-via-sms/', function() {
+  describe('send phone number to /enable-tfa-via-sms/', function() {
     it('shows sms instructions', function(done) {
       testSession
         .post('/')
@@ -455,6 +459,29 @@ describe('enable tfa via sms', function() {
             expect(res2.text).to.contain('Enter your verification code');
             expect(res2.text).to.contain('Submit and verify');
             expect(res2.text).to.contain('Cancel');
+            done();
+          });
+        });
+    });
+  });
+
+  describe('send wrong phone number', function() {
+    it('show error message', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          testSession
+          .post('/enable-tfa-via-sms')
+          .send({
+            'phone_number': 'FAKE'
+          })
+          .end(function(err2, res2) {
+            expect(res2.statusCode).to.equal(200);
+            expect(res2.text).to.contain('There was an error sending');
             done();
           });
         });
