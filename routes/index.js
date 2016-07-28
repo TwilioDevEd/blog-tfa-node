@@ -5,15 +5,20 @@ var express = require('express')
   , User = require('../models/user'); 
 
 router.get('/', function(req, res, next) {
-  var data = emptyData();
+  var data = buildData(req);
   res.render('main_page.jade', data);
+});
+
+router.get('/user/', function(req, res, next) {
+  var data = buildData(req);
+  res.render('user.jade', data);
 });
 
 router.post('/', function(req, res, next) {
   User.findOne({
     'username': req.body.username.toLowerCase()
   }, function (err, user) {
-    var data = emptyData();
+    var data = buildData(req);
     if (!user) {
       data.opts['invalid_username_or_password'] = true;
       res.render('main_page.jade', data);
@@ -38,12 +43,12 @@ router.post('/', function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-  var data = emptyData();
+  var data = buildData(req);
   res.render('main_page.jade', data);
 });
 
 router.post('/sign-up/', function(req, res, next) {
-  var data = emptyData();
+  var data = buildData(req);
   User.findOne({
     'username': req.body.username.toLowerCase()
   }, function (err, result) {
@@ -66,12 +71,14 @@ router.post('/sign-up/', function(req, res, next) {
 
 var loginUser = function(user, req) {
   //TODO
+  req.session.user = user;
 };
 
-var emptyData = function() {
+var buildData = function(req) {
   return { 
     opts: {
-      user: {}
+      user: req.session.user,
+      isAuthenticated: req.session.user !== undefined
     } 
   };
 }
