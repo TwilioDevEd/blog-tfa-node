@@ -300,7 +300,7 @@ describe('sign in', function() {
   });
 
   describe('when I access sign in with app-> false, sms-> true', function() {
-    it.only('redirects to /verify_tfa/ page with "sms was sent" message', function (done) {
+    it('redirects to /verify_tfa/ page with "sms was sent" message', function (done) {
       testSession
         .post('/')
         .send({
@@ -323,4 +323,30 @@ describe('sign in', function() {
         });
     });
   });
+
+  describe('when I access sign in with app-> true, sms-> true', function() {
+    it('redirects to /verify_tfa/ page with "Google Authenticator" + "sms was sent" messages', function (done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user.app_yes.sms_yes',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          expect(res.header.location).to.equal('/verify_tfa/');
+
+          testSession.get(res.header.location)
+          .end(function(err2, res2) {
+            var $ = cheerio.load(res2.text);  
+            expect(res2.text).to.not.contain('You are logged in');
+            expect(res2.text).to.contain('Account Verification');
+            expect(res2.text).to.contain('Google Authenticator');
+            expect(res2.text).to.contain('SMS that was just sent to you');
+            expect(res2.text).to.contain('Enter your verification code here');
+            done();
+          });
+        });
+    });
+  });
+
 });
