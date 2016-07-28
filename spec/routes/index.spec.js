@@ -21,7 +21,8 @@ var expect = require('chai').expect
   , cheerio = require('cheerio')
   , users = require('../../users-data.json')
   , User = require('../../models/user')
-  , app = require('../../app');
+  , app = require('../../app')
+  , totp = require('../../lib/totp');
 
 var testSession = null;
 
@@ -351,8 +352,8 @@ describe('sign in', function() {
 
 });
 
-describe('enable tfa', function() {
-  describe('via app', function() {
+describe('enable tfa via app', function() {
+  describe('get /enable-tfa-via-app/', function() {
     it('shows google authenticator instructions', function(done) {
       testSession
         .post('/')
@@ -377,6 +378,33 @@ describe('enable tfa', function() {
             expect(res2.text).to.contain('Cancel');
 
             done();
+          });
+        });
+    });
+  });
+
+  describe('post /enable-tfa-via-app/ with correct token', function() {
+    it('shows "You are setup via Google Authenticator"', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          User.findOne({'username': 'user'}, function(err, result) {
+            testSession
+            .post('/enable-tfa-via-app')
+            .send({
+              token: new totp.TotpAuth(result.totp_secret).generate()
+            })
+            .end(function(err2, res2) {
+              expect(res2.statusCode).to.equal(200);
+              expect(res2.text).to.contain('You are set up');
+              expect(res2.text).to.contain('via Google Authenticator');
+              done();
+            });
+
           });
         });
     });

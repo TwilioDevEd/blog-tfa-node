@@ -32,8 +32,29 @@ router.get('/enable-tfa-via-app/', function(req, res, next) {
   if (!data.opts.isAuthenticated) {
     res.redirect('/');
   } else {
-    res.render('enable_tfa_via_app.jade', data);  
+    res.render('enable_tfa_via_app.jade', data);
   }  
+});
+
+router.post('/enable-tfa-via-app/', function(req, res, next) {
+  var data = buildData(req);
+  if (!data.opts.isAuthenticated) {
+    res.redirect('/');
+  } else {
+    var token = req.body.token;
+    User.findOne({username: data.opts.user.username}, function(err, user) {
+      if (token && user.validateToken(token)) {
+        user.totp_enabled_via_app = true;
+        User.update(user, function(err, result) {
+          data.opts.user = user;
+          res.render('enable_tfa_via_app.jade', data);
+        });
+      } else {
+        data.opts['token_error'] = true;
+        res.render('enable_tfa_via_app.jade', data);
+      }
+    })
+  }
 });
 
 router.post('/', function(req, res, next) {

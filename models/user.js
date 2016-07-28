@@ -46,8 +46,11 @@ schema.statics.sendSms = function(username, callback) {
       callback(user, false);
     }  
   })
-  
-}
+};
+
+schema.methods.validateToken = function(token) {
+   return new totp.TotpAuth(this.totp_secret).verify(token).delta === 0;
+};
 
 schema.methods.validatePassword = function(pass, callback) {
   bcrypt.compare(pass, this.password_hash, callback);
