@@ -27,6 +27,15 @@ router.get('/user/', function(req, res, next) {
   }  
 });
 
+router.get('/enable-tfa-via-app/', function(req, res, next) {
+  var data = buildData(req);
+  if (!data.opts.isAuthenticated) {
+    res.redirect('/');
+  } else {
+    res.render('enable_tfa_via_app.jade', data);  
+  }  
+});
+
 router.post('/', function(req, res, next) {
   User.findOne({
     'username': req.body.username.toLowerCase()

@@ -350,3 +350,35 @@ describe('sign in', function() {
   });
 
 });
+
+describe('enable tfa', function() {
+  describe('via app', function() {
+    it('shows google authenticator instructions', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+
+          testSession
+          .get('/enable-tfa-via-app')
+          .end(function(err2, res2) {
+            expect(res2.statusCode).to.equal(200);
+            var $ = cheerio.load(res2.text);
+            expect(res2.text).to.contain('Install Google Authenticator');
+            expect(res2.text).to.contain('Open the Google Authenticator app');
+            expect(res2.text).to.contain('Tap menu, then tap "Set up account"');
+            expect(res2.text).to.contain('then tap "Scan a barcode"');
+            expect(res2.text).to.contain('scan the barcode below');
+            expect(res2.text).to.contain('Once you have scanned the barcode, enter the 6-digit code below');
+            expect(res2.text).to.contain('Submit');
+            expect(res2.text).to.contain('Cancel');
+
+            done();
+          });
+        });
+    });
+  });
+});
