@@ -38,7 +38,7 @@ describe('sign in', function () {
       });
     });
     
-  describe('sign in with badpassword', function () {
+  describe('with badpassword', function () {
     it('responds with alert Incorrect Username or Password', function (done) {
       supertest(app)
         .post('/')
@@ -55,7 +55,7 @@ describe('sign in', function () {
     });
   });
 
-  describe('sign in with bad user', function () {
+  describe('with bad user', function () {
     it('responds with alert Incorrect Username or Password', function (done) {
       supertest(app)
         .post('/')
@@ -72,7 +72,7 @@ describe('sign in', function () {
     });
   });
 
-  describe('sign in with bad user and bad password', function () {
+  describe('with bad user and bad password', function () {
     it('responds with alert Incorrect Username or Password', function (done) {
       supertest(app)
         .post('/')
@@ -89,7 +89,7 @@ describe('sign in', function () {
     });
   });
 
-  describe('sign in with correct user and password', function () {
+  describe('with correct user and password', function () {
     it('responds with You are logged in', function (done) {
       supertest(app)
         .post('/')
@@ -103,76 +103,110 @@ describe('sign in', function () {
           done();
         });
     });
+  });
 
-    describe('sign in with tfa', function () {
-      it('responds with "Verify TFA" page', function (done) {
-        supertest(app)
-          .post('/')
-          .send({
-            username: 'user.app_no.sms_yes',
-            password: 'password'
-          })
-          .end(function(err, res){
-            expect(res.statusCode).to.equal(302);
-            expect(res.header.location).to.equal('/verify_tfa/');
-            done();
-          });
-      });
+  describe('with correct user (case insensitive) and password', function () {
+    it('responds with You are logged in', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'UsEr',
+          password: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(302);
+          expect(res.header.location).to.equal('/user/');
+          done();
+        });
     });
   });
 
-  describe('sign up', function () {
-    describe('sign up with passwords not matching', function () {
-      it('responds with "Passwords do not match" message', function (done) {
-        supertest(app)
-          .post('/sign-up/')
-          .send({
-            username: 'newuser',
-            password1: 'password',
-            password2: 'passwordddddd'
-          })
-          .end(function(err, res){
-            expect(res.statusCode).to.equal(200);
-            var $ = cheerio.load(res.text);
-            expect($('.alert.alert-error').text()).to.contain('Passwords do not match');
-            done();
-          });
-      });
+  describe('with sms enabled', function () {
+    it('responds with "Verify TFA" page', function (done) {
+      supertest(app)
+        .post('/')
+        .send({
+          username: 'user.app_no.sms_yes',
+          password: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(302);
+          expect(res.header.location).to.equal('/verify_tfa/');
+          done();
+        });
     });
+  });
+});
 
-    describe('sign up with correct user and password', function () {
-      it('redirects to "/user/"', function (done) {
-        supertest(app)
-          .post('/sign-up/')
-          .send({
-            username: 'newuser',
-            password1: 'password',
-            password2: 'password'
-          })
-          .end(function(err, res){
-            expect(res.statusCode).to.equal(302);
-            expect(res.header.location).to.equal('/user/');
-            done();
-          });
-      });
+describe('sign up', function () {
+  describe('with passwords not matching', function () {
+    it('responds with "Passwords do not match" message', function (done) {
+      supertest(app)
+        .post('/sign-up/')
+        .send({
+          username: 'newuser',
+          password1: 'password',
+          password2: 'passwordddddd'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text);
+          expect($('.alert.alert-error').text()).to.contain('Passwords do not match');
+          done();
+        });
     });
+  });
 
-    describe('sign up with username that already exists', function () {
-      it('redirects to "/user/"', function (done) {
-        supertest(app)
-          .post('/sign-up/')
-          .send({
-            username: 'user2',
-            password1: 'password',
-            password2: 'password'
-          })
-          .end(function(err, res){
-            expect(res.statusCode).to.equal(200);
-            var $ = cheerio.load(res.text);
-            expect($('.alert.alert-error').text()).to.contain('That username is already in use');
-            done();
-          });
-      });
+  describe('with correct user and password', function () {
+    it('redirects to "/user/"', function (done) {
+      supertest(app)
+        .post('/sign-up/')
+        .send({
+          username: 'newuser',
+          password1: 'password',
+          password2: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(302);
+          expect(res.header.location).to.equal('/user/');
+          done();
+        });
+    });
+  });
+
+  describe('with username that already exists', function () {
+    it('redirects to "/user/"', function (done) {
+      supertest(app)
+        .post('/sign-up/')
+        .send({
+          username: 'user2',
+          password1: 'password',
+          password2: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text);
+          expect($('.alert.alert-error').text()).to.contain('That username is already in use');
+          done();
+        });
+    });
+  });
+
+  describe('with username (case insensitive) that already exists', function () {
+    it('redirects to "/user/"', function (done) {
+      supertest(app)
+        .post('/sign-up/')
+        .send({
+          username: 'UsEr2',
+          password1: 'password',
+          password2: 'password'
+        })
+        .end(function(err, res){
+          expect(res.statusCode).to.equal(200);
+          var $ = cheerio.load(res.text);
+          expect($('.alert.alert-error').text()).to.contain('That username is already in use');
+          done();
+        });
     });
   });
 });

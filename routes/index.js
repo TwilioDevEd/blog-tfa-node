@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
 
 router.post('/', function(req, res, next) {
   User.findOne({
-    'username': req.body.username
+    'username': req.body.username.toLowerCase()
   }, function (err, user) {
     var data = emptyData();
     if (!user) {
@@ -45,7 +45,7 @@ router.get('/', function(req, res, next) {
 router.post('/sign-up/', function(req, res, next) {
   var data = emptyData();
   User.findOne({
-    'username': req.body.username
+    'username': req.body.username.toLowerCase()
   }, function (err, result) {
     if (result) {
       data.opts['username_exists'] = true;
