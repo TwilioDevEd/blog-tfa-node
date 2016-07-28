@@ -5,7 +5,7 @@
   },
   {
     "username": "user.app_no.sms_yes",
-    "phone_number": "(415) 555-1212",
+    "phone_number": "+14155551212",
     "totp_secret": "NVHWYJ4OV75YW3WC",
     "totp_enabled_via_sms": true,
     "password_hash": "$2a$12$X0wec23GmmicEe/eYNOM/umKJoTivALHjhg5q/qJ9LtkV4mtri9Au"
@@ -20,7 +20,7 @@
     "username": "user.app_yes.sms_yes",
     "totp_secret": "BOXB6K2SJCR5L7CR",
     "totp_enabled_via_app": true,
-    "phone_number": "(415) 555-1213",
+    "phone_number": "+14155551213",
     "totp_enabled_via_sms": true,
     "password_hash": "$2a$12$hW5/YxlP9RzbUN0k05.nsOtgDslFYjf34U2PH7JG6OeJacIFjx.e."
   },

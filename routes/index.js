@@ -9,6 +9,17 @@ router.get('/', function(req, res, next) {
   res.render('main_page.jade', data);
 });
 
+router.get('/verify_tfa/', function(req, res, next) {
+  var data = buildData(req);
+  console.log('############');
+  console.log(data);
+  User.sendSms(req.session.username, function(user, smsSent) {
+    data.opts['sms_sent'] = smsSent;
+    data.opts.user = user;
+    res.render('verify_tfa.jade', data);
+  });
+});
+
 router.get('/user/', function(req, res, next) {
   var data = buildData(req);
   if (!data.opts.isAuthenticated) {
@@ -44,11 +55,6 @@ router.post('/', function(req, res, next) {
       });
     }
   });
-});
-
-router.get('/', function(req, res, next) {
-  var data = buildData(req);
-  res.render('main_page.jade', data);
 });
 
 router.post('/sign-up/', function(req, res, next) {

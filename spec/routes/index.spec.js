@@ -257,4 +257,27 @@ describe('user page', function() {
         });
     });
   });
+
+  describe('when I access /user/ after sign in with app-> yes, sms->false', function() {
+    it('responds with you are logged in', function (done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user.app_yes.sms_no',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          testSession.get(res.header.location)
+          .end(function(err2, res2) {
+            var $ = cheerio.load(res2.text);  
+            expect(res2.text).to.not.contain('You are logged in');
+            expect(res2.text).to.contain('Account Verification');
+            expect(res2.text).to.contain('Google Authenticator');
+            expect(res2.text).to.not.contain('SMS that was just sent to you');
+            expect(res2.text).to.contain('Enter your verification code here');
+            done();
+          });
+        });
+    });
+  });
 });

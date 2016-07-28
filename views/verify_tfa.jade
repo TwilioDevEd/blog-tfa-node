@@ -19,10 +19,10 @@ block content
             | There was an error verifying your token. Please try again.
         p Please enter you verification code from:
         ul
-          if opts['user'].account['totp_enabled_via_sms']
+          if opts.user['totp_enabled_via_sms']
             li The SMS that was just sent to you
-          if opts['user'].account['totp_enabled_via_app'] 
-            li Google Authentication
+          if opts.user['totp_enabled_via_app'] 
+            li Google Authenticator
       form(method='POST')
         fieldset
           label Enter your verification code here:
@@ -31,5 +31,5 @@ block content
           button.btn(type='submit') Submit
       div
         p
-          if opts['user'].account['totp_enabled_via_sms']
+          if opts.user['totp_enabled_via_sms']
             a(href='/verify-tfa') Send me an SMS with my verification code again.
