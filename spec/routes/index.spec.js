@@ -1,5 +1,21 @@
 'use strict';
 
+var mockery = require('mockery');
+
+mockery.enable();
+mockery.warnOnUnregistered(false);
+mockery.registerMock('twilio', function() {
+  return {
+    sms: {
+      messages: {
+        create: function(opts, callback) {
+          callback(undefined, 'default message');
+        }
+      }
+    }
+  };
+});
+
 var expect = require('chai').expect
   , supertest = require('supertest-session')
   , cheerio = require('cheerio')
@@ -10,7 +26,7 @@ var expect = require('chai').expect
 var testSession = null;
 
 require('../spec-helper');
- 
+
 beforeEach(function () {
   testSession = supertest(app);
 });
@@ -71,7 +87,7 @@ describe('sign in', function () {
         })
         .end(function(err, res){
           expect(res.statusCode).to.equal(200);
-          var $ = cheerio.load(res.text); 
+          var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
           done();
         });
@@ -217,7 +233,7 @@ describe('sign up', function () {
   });
 });
 
-describe('user page', function() {
+describe('sign in', function() {
   describe('when I access /user/ after sign in', function() {
     it('responds with enable buttons', function (done) {
       testSession
@@ -258,8 +274,8 @@ describe('user page', function() {
     });
   });
 
-  describe('when I access /user/ after sign in with app-> yes, sms->false', function() {
-    it('responds with you are logged in', function (done) {
+  describe('when I access sign in with app-> yes, sms->false', function() {
+    it('redirects to /verify_tfa/ page with google authenticator', function (done) {
       testSession
         .post('/')
         .send({
@@ -267,6 +283,8 @@ describe('user page', function() {
           password: 'password'
         })
         .end(function(err, res) {
+          expect(res.header.location).to.equal('/verify_tfa/');
+
           testSession.get(res.header.location)
           .end(function(err2, res2) {
             var $ = cheerio.load(res2.text);  
@@ -274,6 +292,31 @@ describe('user page', function() {
             expect(res2.text).to.contain('Account Verification');
             expect(res2.text).to.contain('Google Authenticator');
             expect(res2.text).to.not.contain('SMS that was just sent to you');
+            expect(res2.text).to.contain('Enter your verification code here');
+            done();
+          });
+        });
+    });
+  });
+
+  describe('when I access sign in with app-> false, sms-> true', function() {
+    it.only('redirects to /verify_tfa/ page with "sms was sent" message', function (done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user.app_no.sms_yes',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          expect(res.header.location).to.equal('/verify_tfa/');
+
+          testSession.get(res.header.location)
+          .end(function(err2, res2) {
+            var $ = cheerio.load(res2.text);  
+            expect(res2.text).to.not.contain('You are logged in');
+            expect(res2.text).to.contain('Account Verification');
+            expect(res2.text).to.not.contain('Google Authenticator');
+            expect(res2.text).to.contain('SMS that was just sent to you');
             expect(res2.text).to.contain('Enter your verification code here');
             done();
           });

@@ -3,7 +3,7 @@
 var bcrypt = require('bcrypt-nodejs')
   , totp = require('../lib/totp')
   , mongoose = require('mongoose')
-  , twilio = require('twilio');
+  , twilioClient = require('twilio')();
 
 var schema = new mongoose.Schema({
   username: String,
@@ -29,16 +29,16 @@ schema.statics.sendSms = function(username, callback) {
     if (user.totp_enabled_via_sms) {
       var token = new totp.TotpAuth().generate();
       var msg = `Use this code to log in: ${token}`;
-      client.sms.messages.create({
+      twilioClient.sms.messages.create({
         to: user.phone_number,
         from: process.env.TWILIO_PHONE_NUMBER,
         body: msg
       }, function(err, message) {
         if (!err) {
-          console.log(`Success! The SID for this SMS message is: ${message.sid}`);
           callback(user, true);
         } else {
-          console.log('Oops! There was an error!');
+          console.log(`Oops! There was an error!`);
+          console.log(err);
           callback(user, false);
         }
       });

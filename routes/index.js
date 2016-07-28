@@ -11,8 +11,6 @@ router.get('/', function(req, res, next) {
 
 router.get('/verify_tfa/', function(req, res, next) {
   var data = buildData(req);
-  console.log('############');
-  console.log(data);
   User.sendSms(req.session.username, function(user, smsSent) {
     data.opts['sms_sent'] = smsSent;
     data.opts.user = user;
