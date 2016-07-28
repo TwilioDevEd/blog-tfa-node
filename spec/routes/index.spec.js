@@ -409,4 +409,31 @@ describe('enable tfa via app', function() {
         });
     });
   });
+
+  describe('post /enable-tfa-via-app/ with wrong token', function() {
+    it('shows "There was an error verifying your token"', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          User.findOne({'username': 'user'}, function(err, result) {
+            testSession
+            .post('/enable-tfa-via-app')
+            .send({
+              token: '-1'
+            })
+            .end(function(err2, res2) {
+              expect(res2.statusCode).to.equal(200);
+              expect(res2.text).to.contain('There was an error verifying your token');
+              done();
+            });
+
+          });
+        });
+    });
+  });
+
 });

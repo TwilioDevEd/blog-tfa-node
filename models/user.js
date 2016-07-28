@@ -49,7 +49,8 @@ schema.statics.sendSms = function(username, callback) {
 };
 
 schema.methods.validateToken = function(token) {
-   return new totp.TotpAuth(this.totp_secret).verify(token).delta === 0;
+  var verify = new totp.TotpAuth(this.totp_secret).verify(token);
+  return verify && verify.delta === 0;
 };
 
 schema.methods.validatePassword = function(pass, callback) {
