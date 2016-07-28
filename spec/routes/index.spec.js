@@ -238,4 +238,23 @@ describe('user page', function() {
         });
     });
   });
+
+  describe('when I access /user/ after sign in with app-> false, sms->false', function() {
+    it('responds with you are logged in', function (done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user.app_no.sms_no',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          testSession.get(res.header.location)
+          .end(function(err2, res2) {
+            var $ = cheerio.load(res2.text);
+            expect($('.container div h1').text()).to.contain('You are logged in');
+            done();
+          });
+        });
+    });
+  });
 });
