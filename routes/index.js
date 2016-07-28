@@ -11,7 +11,11 @@ router.get('/', function(req, res, next) {
 
 router.get('/user/', function(req, res, next) {
   var data = buildData(req);
-  res.render('user.jade', data);
+  if (!data.opts.isAuthenticated) {
+    res.redirect('/');
+  } else {
+    res.render('user.jade', data);  
+  }  
 });
 
 router.post('/', function(req, res, next) {
