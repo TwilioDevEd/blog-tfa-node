@@ -21,11 +21,13 @@ router.post('/', loginRequired, (req, res, next) => {
   User.findByUsername(data.opts.user.username)
   .then((user) => {
     if (token && user.validateToken(token)) {
-      user.totp_enabled_via_app = true;
-      User.update(user, (err, result) => {
-        data.opts.user = user;
+      User.update({username: user.username}, {totp_enabled_via_app: true})
+      .then((updatedUser) => {
+        req.session.user.totp_enabled_via_app = true;
+        data.opts.user = req.session.user;
         res.render('enable_tfa_via_app.jade', data);
-      });
+      })
+      .catch((updateErr) => next(updateErr));
     } else {
       data.opts['token_error'] = true;
       res.render('enable_tfa_via_app.jade', data);

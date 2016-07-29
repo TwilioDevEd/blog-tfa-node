@@ -37,6 +37,7 @@ router.post('/', loginRequired, (req, res, next) => {
       user.totp_enabled_via_sms = true;
       user.save((err, result) => {
         data.opts.user = user;
+        req.session.user = user;
         res.render('enable_tfa_via_sms.jade', data);
       });
     } else {
