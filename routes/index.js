@@ -4,7 +4,7 @@ var express = require('express')
   , router = express.Router()
   , User = require('../models/user');
 
-var loginRequired = function(req, res, next) {
+var loginRequired = (req, res, next) => {
   var data = buildData(req);
   if (!data.opts.isAuthenticated) {
     res.redirect('/');
@@ -13,7 +13,7 @@ var loginRequired = function(req, res, next) {
   }
 };
 
-var buildData = function(req) {
+var buildData = (req) => {
   return {
     opts: {
       user: req.session.user,
@@ -22,45 +22,43 @@ var buildData = function(req) {
   };
 };
 
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) => {
   var data = buildData(req);
   res.render('main_page.jade', data);
 });
 
-router.get('/logout/', function(req, res, next) {
-  req.session.destroy(function(err) {
-    res.redirect('/');
-  });
+router.get('/logout/', (req, res, next) => {
+  req.session.destroy((err) => res.redirect('/'));
 });
 
-router.get('/verify-tfa/', function(req, res, next) {
+router.get('/verify-tfa/', (req, res, next) => {
   var data = buildData(req);
-  User.sendSms(req.session.username, function(user, smsSent) {
+  User.sendSms(req.session.username, (user, smsSent) => {
     data.opts['sms_sent'] = smsSent;
     data.opts.user = user;
     res.render('verify_tfa.jade', data);
   });
 });
 
-router.get('/user/', loginRequired, function(req, res, next) {
+router.get('/user/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   res.render('user.jade', data);
 });
 
-router.get('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
+router.get('/enable-tfa-via-app/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   res.render('enable_tfa_via_app.jade', data);
 });
 
-router.get('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
+router.get('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   res.render('enable_tfa_via_sms.jade', data);  
 });
 
-router.post('/verify-tfa/', function(req, res, next) {
+router.post('/verify-tfa/', (req, res, next) => {
   var data = buildData(req);
-  User.findByUsername(req.session.username, function(err, user) {
+  User.findByUsername(req.session.username, (err, user) => {
     data.opts.user = user;
     if (req.session.username === undefined) {
       data.opts['user-no-username'] = true;
@@ -82,25 +80,25 @@ router.post('/verify-tfa/', function(req, res, next) {
   });
 });
 
-router.post('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
+router.post('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   var phoneNumber = req.body['phone_number'];
   var token = req.body.token;
 
-  User.findByUsername(data.opts.user.username, function(err, user) {
+  User.findByUsername(data.opts.user.username, (err, user) => {
     if (phoneNumber) {
-        user['phone_number'] = phoneNumber;
-        user.save(function(err, updatedUser) {
-          User.sendSms(user.username, function(sentSmsUser, smsSent) {
-            data.opts.user = sentSmsUser;
-            data.opts['sms_sent'] = smsSent;
-            data.opts['phone_number_updated'] = true;
-            res.render('enable_tfa_via_sms.jade', data);
-          });
+      user['phone_number'] = phoneNumber;
+      user.save((err, updatedUser) => {
+        User.sendSms(user.username, (sentSmsUser, smsSent) => {
+          data.opts.user = sentSmsUser;
+          data.opts['sms_sent'] = smsSent;
+          data.opts['phone_number_updated'] = true;
+          res.render('enable_tfa_via_sms.jade', data);
         });
+      });
     } else if (token && user.validateToken(token)) {
       user.totp_enabled_via_sms = true;
-      user.save(function(err, result) {
+      user.save((err, result) => {
         data.opts.user = user;
         res.render('enable_tfa_via_sms.jade', data);
       });
@@ -111,14 +109,14 @@ router.post('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
   });
 });
 
-router.post('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
+router.post('/enable-tfa-via-app/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   var token = req.body.token;
-  User.findByUsername(data.opts.user.username, function(err, user) {
+  User.findByUsername(data.opts.user.username, (err, user) => {
     if (token && user.validateToken(token)) {
       user.totp_enabled_via_app = true;
-      User.update(user, function(err, result) {
+      User.update(user, (err, result) => {
         data.opts.user = user;
         res.render('enable_tfa_via_app.jade', data);
       });
@@ -129,14 +127,14 @@ router.post('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
   });
 });
 
-router.post('/', function(req, res, next) {
-  User.findByUsername(req.body.username, function(err, user) {
+router.post('/', (req, res, next) => {
+  User.findByUsername(req.body.username, (err, user) => {
     var data = buildData(req);
     if (!user) {
       data.opts['invalid_username_or_password'] = true;
       res.render('main_page.jade', data);
     } else {
-      user.validatePassword(req.body.password, function(err, isValid) {
+      user.validatePassword(req.body.password, (err, isValid) => {
         if (!isValid) {
           data.opts['invalid_username_or_password'] = true;
           res.render('main_page.jade', data);
@@ -155,9 +153,9 @@ router.post('/', function(req, res, next) {
   });
 });
 
-router.post('/sign-up/', function(req, res, next) {
+router.post('/sign-up/', (req, res, next) => {
   var data = buildData(req);
-  User.findByUsername(req.body.username, function (err, result) {
+  User.findByUsername(req.body.username, (err, result) => {
     if (result) {
       data.opts['username_exists'] = true;
       res.render('sign_up.jade', data);
@@ -165,11 +163,9 @@ router.post('/sign-up/', function(req, res, next) {
       data.opts['passwords_do_not_match'] = true;
       res.render('sign_up.jade', data);
     } else {
-      User.build(req.body.username, req.body.password1, function(user) {
-        User.create(user, function(err, user) {
-          req.session.user = user;
-          res.redirect('/user/');
-        });  
+      User.buildAndCreate(req.body.username, req.body.password1, (err, user) => {
+        req.session.user = user;
+        res.redirect('/user/');
       });
     }
   });

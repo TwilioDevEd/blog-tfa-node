@@ -16,18 +16,18 @@ var schema = new mongoose.Schema({
   password_hash: String
 });
 
-schema.statics.build = function(username, password, callback) {
-  bcrypt.hash(password, null, null, function(err, hash) {
-    callback({
+schema.statics.buildAndCreate = function(username, password, callback) {
+  bcrypt.hash(password, null, null, (err, hash) => {
+    this.create({
       'username': username,
       'password_hash': hash,
       'totp_secret': totp.secret//TODO change this
-    });
+    }, callback);
   });
 }
 
 schema.statics.sendSms = function(username, callback) {
-  this.findByUsername(username, function(err, user) {
+  this.findByUsername(username, (err, user) => {
     var token = new totp.TotpAuth(user.totp_secret).generate();
     var msg = `Use this code to log in: ${token}`;
     console.log(msg);
