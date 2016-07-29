@@ -10,7 +10,7 @@ var express = require('express')
 router.get('/', (req, res, next) => {
   var data = buildData(req);
   sendSms(req.session.username, (user, smsSent) => {
-    data.opts['sms_sent'] = smsSent;
+    data.opts.sms_sent = smsSent;
     data.opts.user = user;
     res.render('verify_tfa.jade', data);
   });
@@ -23,10 +23,10 @@ router.post('/', (req, res, next) => {
   .then((user) => {
     data.opts.user = user;
     if (req.session.username === undefined) {
-      data.opts['user-no-username'] = true;
+      data.opts.errorNoUsername = true;
       res.render('verify_tfa.jade', data);
     } else if (req.session.stage !== 'password-validated') {
-      data.opts['error-unverified-password'] = true;
+      data.opts.errorUnverifiedPassword = true;
       res.render('verify_tfa.jade', data); 
     } else {
       var token = req.body.token;
@@ -35,7 +35,7 @@ router.post('/', (req, res, next) => {
         req.session.stage = 'logged-in';
         res.redirect('/user/');
       } else {
-        data.opts['error-invalid-token'] = true;
+        data.opts.errorInvalidToken = true;
         res.render('verify_tfa.jade', data);
       }
     }

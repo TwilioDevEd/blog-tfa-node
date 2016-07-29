@@ -6,7 +6,7 @@ block content
     div
       h1 Enable Google Authenticator
 
-      if opts['token_error']
+      if opts.tokenError
         .alert.alert-error
           button(type='button', class='close', data-dismiss='alert') &times;
           | There was an error verifying your token. Please try again.

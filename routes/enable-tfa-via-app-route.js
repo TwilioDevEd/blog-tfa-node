@@ -29,7 +29,7 @@ router.post('/', loginRequired, (req, res, next) => {
       })
       .catch((updateErr) => next(updateErr));
     } else {
-      data.opts['token_error'] = true;
+      data.opts.tokenError = true;
       res.render('enable_tfa_via_app.jade', data);
     }
   })

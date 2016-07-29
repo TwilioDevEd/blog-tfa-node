@@ -6,4 +6,5 @@ install:
 - npm install
 services: mongodb
 script:
+- npm run jshint
 - npm test

@@ -17,15 +17,15 @@ router.post('/', (req, res, next) => {
   .then((user) => {
     var data = buildData(req);
     if (!user) {
-      data.opts['invalid_username_or_password'] = true;
+      data.opts.invalidUsernameOrPassword = true;
       res.render('main_page.jade', data);
     } else {
       user.validatePassword(req.body.password, (err, isValid) => {
         if (!isValid) {
-          data.opts['invalid_username_or_password'] = true;
+          data.opts.invalidUsernameOrPassword = true;
           res.render('main_page.jade', data);
         } else {
-          if (user['totp_enabled_via_sms'] || user['totp_enabled_via_app']) {
+          if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
             req.session.username = user.username;
             req.session.stage = 'password-validated';
             res.redirect('/verify-tfa/');

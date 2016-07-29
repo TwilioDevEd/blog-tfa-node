@@ -5,23 +5,23 @@ block content
     .well
       div
         h1 Account Verification
-        if opts['error-no-username']
+        if opts.errorNoUsername
           .alert.alert-error
             button.close(type='button', data-dismiss='alert') &times;
             | Unable to determine your username. Are cookies enabled in your browser?
-        if opts['error-unverified-password']
+        if opts.errorUnverifiedPassword
           .alert.alert-error
             button.close(type='button', data-dismiss='alert') &times;
             | Unable to determine if you've entered your password correctly.
-        if opts['error-invalid-token']
+        if opts.errorInvalidToken
           .alert.alert-error
             button.close(type='button', data-dismiss='alert') &times;
             | There was an error verifying your token. Please try again.
         p Please enter you verification code from:
         ul
-          if opts.user['totp_enabled_via_sms']
+          if opts.user.totp_enabled_via_sms
             li The SMS that was just sent to you
-          if opts.user['totp_enabled_via_app'] 
+          if opts.user.totp_enabled_via_app
             li Google Authenticator
       form(method='POST')
         fieldset
@@ -31,5 +31,5 @@ block content
           button.btn(type='submit') Submit
       div
         p
-          if opts.user['totp_enabled_via_sms']
+          if opts.user.totp_enabled_via_sms
             a(href='/verify-tfa') Send me an SMS with my verification code again.

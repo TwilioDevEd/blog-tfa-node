@@ -29,13 +29,13 @@ schema.statics.buildAndCreate = function(username, password, callback, fallback)
 
 schema.statics.findByUsername = function(username, callback) {
   return this.findOne({'username': username.toLowerCase()}, callback);
-}
+};
 
 schema.statics.qrcodeUri = function(user) {
   var encoded = base32.encode(user.totp_secret);
   var encodedForGoogle = encoded.toString().replace(/=/g,'');
   return `otpauth://totp/${user.username}?secret=${encodedForGoogle}`;
-}
+};
 
 schema.methods.validateToken = function(token) {
   console.log(`Validating token ${token}`);

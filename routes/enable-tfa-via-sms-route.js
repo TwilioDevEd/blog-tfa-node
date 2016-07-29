@@ -16,19 +16,19 @@ router.get('/', loginRequired, (req, res, next) => {
 // POST //enable-tfa-via-sms/
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  var phoneNumber = req.body['phone_number'];
+  var phoneNumber = req.body.phone_number;
   var token = req.body.token;
 
   User.findByUsername(data.opts.user.username)
   .then((user) => {
     if (phoneNumber) {
-      user['phone_number'] = phoneNumber;
+      user.phone_number = phoneNumber;
       user.save()
       .then((updatedUser) => {
         sendSms(user.username, (sentSmsUser, smsSent) => {
           data.opts.user = sentSmsUser;
-          data.opts['sms_sent'] = smsSent;
-          data.opts['phone_number_updated'] = true;
+          data.opts.smsSent = smsSent;
+          data.opts.phone_number_updated = true;
           res.render('enable_tfa_via_sms.jade', data);
         });
       })
@@ -41,7 +41,7 @@ router.post('/', loginRequired, (req, res, next) => {
         res.render('enable_tfa_via_sms.jade', data);
       });
     } else {
-      data.opts['token_error'] = true;
+      data.opts.tokenError = true;
       res.render('enable_tfa_via_sms.jade', data);
     }
   })

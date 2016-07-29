@@ -8,13 +8,13 @@ block content
         | Remember, this is just for demonstration purposes. Don't use a password
         | here that you use anywhere else.
 
-    if opts['username_exists']
+    if opts.usernameExists
       .alert.alert-error
         button(type='button', class='close', data-dismiss='alert')
           | &times;
         | That username is already in use.
 
-    if opts['passwords_do_not_match']
+    if opts.passwordsDoNotMatch
       .alert.alert-error
         button(type='button', class='close', data-dismiss='alert')
           | &times;

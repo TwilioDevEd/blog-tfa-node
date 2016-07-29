@@ -17,10 +17,10 @@ router.post('/', (req, res, next) => {
   User.findByUsername(req.body.username)
   .then((result) => {
     if (result) {
-      data.opts['username_exists'] = true;
+      data.opts.usernameExists = true;
       res.render('sign_up.jade', data);
     } else if (req.body.password1 != req.body.password2) {
-      data.opts['passwords_do_not_match'] = true;
+      data.opts.passwordsDoNotMatch = true;
       res.render('sign_up.jade', data);
     } else {
       User.buildAndCreate(req.body.username, req.body.password1, (user) => {
