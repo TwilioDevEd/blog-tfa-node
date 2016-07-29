@@ -158,7 +158,7 @@ describe('sign in', function () {
         })
         .end(function(err, res){
           expect(res.statusCode).to.equal(302);
-          expect(res.header.location).to.equal('/verify_tfa/');
+          expect(res.header.location).to.equal('/verify-tfa/');
           done();
         });
     });
@@ -280,7 +280,7 @@ describe('sign in', function() {
   });
 
   describe('when I access sign in with app-> yes, sms->false', function() {
-    it('redirects to /verify_tfa/ page with google authenticator', function (done) {
+    it('redirects to /verify-tfa/ page with google authenticator', function (done) {
       testSession
         .post('/')
         .send({
@@ -288,7 +288,7 @@ describe('sign in', function() {
           password: 'password'
         })
         .end(function(err, res) {
-          expect(res.header.location).to.equal('/verify_tfa/');
+          expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
           .end(function(err2, res2) {
@@ -305,7 +305,7 @@ describe('sign in', function() {
   });
 
   describe('when I access sign in with app-> false, sms-> true', function() {
-    it('redirects to /verify_tfa/ page with "sms was sent" message', function (done) {
+    it('redirects to /verify-tfa/ page with "sms was sent" message', function (done) {
       testSession
         .post('/')
         .send({
@@ -313,7 +313,7 @@ describe('sign in', function() {
           password: 'password'
         })
         .end(function(err, res) {
-          expect(res.header.location).to.equal('/verify_tfa/');
+          expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
           .end(function(err2, res2) {
@@ -330,7 +330,7 @@ describe('sign in', function() {
   });
 
   describe('when I access sign in with app-> true, sms-> true', function() {
-    it('redirects to /verify_tfa/ page with "Google Authenticator" + "sms was sent" messages', function (done) {
+    it('redirects to /verify-tfa/ page with "Google Authenticator" + "sms was sent" messages', function (done) {
       testSession
         .post('/')
         .send({
@@ -338,7 +338,7 @@ describe('sign in', function() {
           password: 'password'
         })
         .end(function(err, res) {
-          expect(res.header.location).to.equal('/verify_tfa/');
+          expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
           .end(function(err2, res2) {
@@ -520,6 +520,66 @@ describe('enable tfa via sms', function() {
             });
           });
         });
+    });
+  });
+});
+
+describe('verify tfa sms enabled', function() {
+  describe('when submits valid token', function() {
+    it('logins', function(done) {
+      testSession
+      .post('/')
+      .send({
+        username: 'user.app_no.sms_yes',
+        password: 'password'
+      })
+      .end(function(err, res) {
+        testSession
+        .get('/verify-tfa/')
+        .end(function(err2, res2){
+          expect(res2.statusCode).to.equal(200);
+          expect(res2.text).to.contain('The SMS that was just sent to you');
+          //TODO improve this test using spy
+          var token = new totp.TotpAuth('NVHWYJ4OV75YW3WC').generate();
+          testSession
+          .post('/verify-tfa/')
+          .send({'token': token})
+          .end(function(err3, res3) {
+            expect(res3.statusCode).to.equal(302);
+            expect(res3.header.location).to.equal('/user/');
+            done();
+          });
+        });
+      });
+    });
+  });
+
+  describe('when submits invalid token', function() {
+    it('show token is invalid message', function(done) {
+      testSession
+      .post('/')
+      .send({
+        username: 'user.app_no.sms_yes',
+        password: 'password'
+      })
+      .end(function(err, res) {
+        testSession
+        .get('/verify-tfa/')
+        .end(function(err2, res2){
+          expect(res2.statusCode).to.equal(200);
+          expect(res2.text).to.contain('The SMS that was just sent to you');
+          //TODO improve this test using spy
+          var token = new totp.TotpAuth('WRONG_TOKEN').generate();
+          testSession
+          .post('/verify-tfa/')
+          .send({'token': token})
+          .end(function(err3, res3) {
+            expect(res3.statusCode).to.equal(200);
+            expect(res3.text).to.contain('There was an error verifying your token');
+            done();
+          });
+        });
+      });
     });
   });
 });

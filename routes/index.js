@@ -9,7 +9,13 @@ router.get('/', function(req, res, next) {
   res.render('main_page.jade', data);
 });
 
-router.get('/verify_tfa/', function(req, res, next) {
+router.get('/logout/', function(req, res, next) {
+  req.session.destroy(function(err) {
+    res.redirect('/');
+  });
+});
+
+router.get('/verify-tfa/', function(req, res, next) {
   var data = buildData(req);
   User.sendSms(req.session.username, function(user, smsSent) {
     data.opts['sms_sent'] = smsSent;
@@ -42,7 +48,31 @@ router.get('/enable-tfa-via-sms/', function(req, res, next) {
     res.redirect('/');
   } else {
     res.render('enable_tfa_via_sms.jade', data);
-  }  
+  }
+});
+
+router.post('/verify-tfa/', function(req, res, next) {
+  var data = buildData(req);
+  User.findOne({username: req.session.username}, function(err, user) {
+    data.opts.user = user;
+    if (req.session.username === undefined) {
+      data.opts['user-no-username'] = true;
+      res.render('verify_tfa.jade', data);
+    } else if (req.session.stage !== 'password-validated') {
+      data.opts['error-unverified-password'] = true;
+      res.render('verify_tfa.jade', data); 
+    } else {
+      var token = req.body.token;
+      if (token && user.validateToken(token)) {
+        loginUser(user, req);
+        req.session.stage = 'logged-in';
+        res.redirect('/user/');
+      } else {
+        data.opts['error-invalid-token'] = true;
+        res.render('verify_tfa.jade', data);
+      }
+    }
+  });
 });
 
 router.post('/enable-tfa-via-sms/', function(req, res, next) {
@@ -54,7 +84,6 @@ router.post('/enable-tfa-via-sms/', function(req, res, next) {
     var token = req.body.token;
 
     User.findOne({username: data.opts.user.username}, function(err, user) {
-
       if (phoneNumber) {
           user['phone_number'] = phoneNumber;
           user.save(function(err, updatedUser) {
@@ -117,10 +146,10 @@ router.post('/', function(req, res, next) {
           if (user['totp_enabled_via_sms'] || user['totp_enabled_via_app']) {
             req.session.username = user.username;
             req.session.stage = 'password-validated';
-            res.redirect('/verify_tfa/');
+            res.redirect('/verify-tfa/');
           } else {
             loginUser(user, req);
-            res.redirect('/user/');  
+            res.redirect('/user/');
           }
         }
       });

@@ -7,15 +7,15 @@ block content
         h1 Account Verification
         if opts['error-no-username']
           .alert.alert-error
-            button(type='button', class='close', data-dismiss='alert') &times;
+            button.close(type='button', data-dismiss='alert') &times;
             | Unable to determine your username. Are cookies enabled in your browser?
         if opts['error-unverified-password']
           .alert.alert-error
-            button type='button', class='close', data-dismiss='alert') &times;
+            button.close(type='button', data-dismiss='alert') &times;
             | Unable to determine if you've entered your password correctly.
         if opts['error-invalid-token']
           .alert.alert-error
-            button type='button', class='close', data-dismiss='alert') &times;
+            button.close(type='button', data-dismiss='alert') &times;
             | There was an error verifying your token. Please try again.
         p Please enter you verification code from:
         ul
