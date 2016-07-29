@@ -27,7 +27,7 @@ schema.statics.build = function(username, password, callback) {
 }
 
 schema.statics.sendSms = function(username, callback) {
-  this.findOne({'username': username}, function(err, user) {
+  this.findByUsername(username, function(err, user) {
     var token = new totp.TotpAuth(user.totp_secret).generate();
     var msg = `Use this code to log in: ${token}`;
     console.log(msg);
@@ -47,6 +47,16 @@ schema.statics.sendSms = function(username, callback) {
   });
 };
 
+schema.statics.findByUsername = function(username, callback) {
+  this.findOne({'username': username.toLowerCase()}, callback);
+}
+
+schema.statics.qrcodeUri = function(user) {
+  var encoded = base32.encode(user.totp_secret);
+  var encodedForGoogle = encoded.toString().replace(/=/g,'');
+  return `otpauth://totp/somelabel?secret=${encodedForGoogle}`;
+}
+
 schema.methods.validateToken = function(token) {
   console.log(`Validating token ${token}`);
   var verify = new totp.TotpAuth(this.totp_secret).verify(token);
@@ -56,11 +66,5 @@ schema.methods.validateToken = function(token) {
 schema.methods.validatePassword = function(pass, callback) {
   bcrypt.compare(pass, this.password_hash, callback);
 };
-
-schema.statics.qrcodeUri = function(user) {
-  var encoded = base32.encode(user.totp_secret);
-  var encodedForGoogle = encoded.toString().replace(/=/g,'');
-  return `otpauth://totp/somelabel?secret=${encodedForGoogle}`;
-}
 
 module.exports = mongoose.model('user', schema);

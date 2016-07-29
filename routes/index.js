@@ -60,7 +60,7 @@ router.get('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
 
 router.post('/verify-tfa/', function(req, res, next) {
   var data = buildData(req);
-  User.findOne({username: req.session.username}, function(err, user) {
+  User.findByUsername(req.session.username, function(err, user) {
     data.opts.user = user;
     if (req.session.username === undefined) {
       data.opts['user-no-username'] = true;
@@ -87,7 +87,7 @@ router.post('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
   var phoneNumber = req.body['phone_number'];
   var token = req.body.token;
 
-  User.findOne({username: data.opts.user.username}, function(err, user) {
+  User.findByUsername(data.opts.user.username, function(err, user) {
     if (phoneNumber) {
         user['phone_number'] = phoneNumber;
         user.save(function(err, updatedUser) {
@@ -115,7 +115,7 @@ router.post('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
   var data = buildData(req);
   data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   var token = req.body.token;
-  User.findOne({username: data.opts.user.username}, function(err, user) {
+  User.findByUsername(data.opts.user.username, function(err, user) {
     if (token && user.validateToken(token)) {
       user.totp_enabled_via_app = true;
       User.update(user, function(err, result) {
@@ -130,9 +130,7 @@ router.post('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
 });
 
 router.post('/', function(req, res, next) {
-  User.findOne({
-    'username': req.body.username.toLowerCase()
-  }, function (err, user) {
+  User.findByUsername(req.body.username, function(err, user) {
     var data = buildData(req);
     if (!user) {
       data.opts['invalid_username_or_password'] = true;
@@ -159,9 +157,7 @@ router.post('/', function(req, res, next) {
 
 router.post('/sign-up/', function(req, res, next) {
   var data = buildData(req);
-  User.findOne({
-    'username': req.body.username.toLowerCase()
-  }, function (err, result) {
+  User.findByUsername(req.body.username, function (err, result) {
     if (result) {
       data.opts['username_exists'] = true;
       res.render('sign_up.jade', data);
