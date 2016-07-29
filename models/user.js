@@ -3,7 +3,9 @@
 var bcrypt = require('bcrypt-nodejs')
   , totp = require('../lib/totp')
   , mongoose = require('mongoose')
-  , twilioClient = require('twilio')();
+  , twilioClient = require('twilio')()
+  , base32 = require('thirty-two');
+;
 
 var schema = new mongoose.Schema({
   username: { type: String, unique: true, required: true, dropDups: true },
@@ -54,5 +56,11 @@ schema.methods.validateToken = function(token) {
 schema.methods.validatePassword = function(pass, callback) {
   bcrypt.compare(pass, this.password_hash, callback);
 };
+
+schema.statics.qrcodeUri = function(user) {
+  var encoded = base32.encode(user.totp_secret);
+  var encodedForGoogle = encoded.toString().replace(/=/g,'');
+  return `otpauth://totp/somelabel?secret=${encodedForGoogle}`;
+}
 
 module.exports = mongoose.model('user', schema);

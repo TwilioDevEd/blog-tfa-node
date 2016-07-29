@@ -2,7 +2,7 @@
 
 var express = require('express')
   , router = express.Router()
-  , User = require('../models/user'); 
+  , User = require('../models/user');
 
 var loginRequired = function(req, res, next) {
   var data = buildData(req);
@@ -11,7 +11,16 @@ var loginRequired = function(req, res, next) {
   } else {
     next();
   }
-}
+};
+
+var buildData = function(req) {
+  return {
+    opts: {
+      user: req.session.user,
+      isAuthenticated: req.session.user !== undefined
+    }
+  };
+};
 
 router.get('/', function(req, res, next) {
   var data = buildData(req);
@@ -40,6 +49,7 @@ router.get('/user/', loginRequired, function(req, res, next) {
 
 router.get('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
   var data = buildData(req);
+  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   res.render('enable_tfa_via_app.jade', data);
 });
 
@@ -61,7 +71,7 @@ router.post('/verify-tfa/', function(req, res, next) {
     } else {
       var token = req.body.token;
       if (token && user.validateToken(token)) {
-        loginUser(user, req);
+        req.session.user = user;
         req.session.stage = 'logged-in';
         res.redirect('/user/');
       } else {
@@ -103,6 +113,7 @@ router.post('/enable-tfa-via-sms/', loginRequired, function(req, res, next) {
 
 router.post('/enable-tfa-via-app/', loginRequired, function(req, res, next) {
   var data = buildData(req);
+  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   var token = req.body.token;
   User.findOne({username: data.opts.user.username}, function(err, user) {
     if (token && user.validateToken(token)) {
@@ -137,7 +148,7 @@ router.post('/', function(req, res, next) {
             req.session.stage = 'password-validated';
             res.redirect('/verify-tfa/');
           } else {
-            loginUser(user, req);
+            req.session.user = user;
             res.redirect('/user/');
           }
         }
@@ -160,26 +171,12 @@ router.post('/sign-up/', function(req, res, next) {
     } else {
       User.build(req.body.username, req.body.password1, function(user) {
         User.create(user, function(err, user) {
-          loginUser(user, req);
+          req.session.user = user;
           res.redirect('/user/');
         });  
       });
     }
   });
 });
-
-var loginUser = function(user, req) {
-  //TODO
-  req.session.user = user;
-};
-
-var buildData = function(req) {
-  return { 
-    opts: {
-      user: req.session.user,
-      isAuthenticated: req.session.user !== undefined
-    } 
-  };
-}
 
 module.exports = router;
