@@ -487,4 +487,39 @@ describe('enable tfa via sms', function() {
         });
     });
   });
+
+  describe('send correct token to /enable-tfa-via-sms/', function() {
+    it('shows "you are set up" msg', function(done) {
+      testSession
+        .post('/')
+        .send({
+          username: 'user',
+          password: 'password'
+        })
+        .end(function(err, res) {
+          testSession
+          .post('/enable-tfa-via-sms')
+          .send({
+            'phone_number': '+14155551212'
+          })
+          .end(function(err2, res2) {
+            //TODO improve this test using spy
+            var token = new totp.TotpAuth().generate();
+
+            testSession
+            .post('/enable-tfa-via-sms')
+            .send({
+              'token': token
+            })
+            .end(function(err2, res2) {
+              expect(res2.statusCode).to.equal(200);
+              expect(res2.text).to.contain('You are set up');
+              expect(res2.text).to.contain('via Twilio SMS');
+
+              done();
+            });
+          });
+        });
+    });
+  });
 });

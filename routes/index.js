@@ -52,7 +52,9 @@ router.post('/enable-tfa-via-sms/', function(req, res, next) {
   } else {
     var phoneNumber = req.body['phone_number'];
     var token = req.body.token;
+
     User.findOne({username: data.opts.user.username}, function(err, user) {
+
       if (phoneNumber) {
           user['phone_number'] = phoneNumber;
           user.save(function(err, updatedUser) {
@@ -64,8 +66,8 @@ router.post('/enable-tfa-via-sms/', function(req, res, next) {
             });
           });
       } else if (token && user.validateToken(token)) {
-        user.totp_enabled_via_app = true;
-        User.update(user, function(err, result) {
+        user.totp_enabled_via_sms = true;
+        user.save(function(err, result) {
           data.opts.user = user;
           res.render('enable_tfa_via_sms.jade', data);
         });

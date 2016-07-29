@@ -6,7 +6,7 @@ var bcrypt = require('bcrypt-nodejs')
   , twilioClient = require('twilio')();
 
 var schema = new mongoose.Schema({
-  username: String,
+  username: { type: String, unique: true, required: true, dropDups: true },
   totp_secret: String,
   totp_enabled_via_app: Boolean,
   phone_number: String,
@@ -26,8 +26,9 @@ schema.statics.build = function(username, password, callback) {
 
 schema.statics.sendSms = function(username, callback) {
   this.findOne({'username': username}, function(err, user) {
-    var token = new totp.TotpAuth().generate();
+    var token = new totp.TotpAuth(user.totp_secret).generate();
     var msg = `Use this code to log in: ${token}`;
+    console.log(msg);
     twilioClient.sms.messages.create({
       to: user.phone_number,
       from: process.env.TWILIO_PHONE_NUMBER,
@@ -46,7 +47,7 @@ schema.statics.sendSms = function(username, callback) {
 
 schema.methods.validateToken = function(token) {
   var verify = new totp.TotpAuth(this.totp_secret).verify(token);
-  return verify && verify.delta === 0;
+  return verify !== null && verify.delta === 0;
 };
 
 schema.methods.validatePassword = function(pass, callback) {
