@@ -46,6 +46,7 @@ schema.statics.sendSms = function(username, callback) {
 };
 
 schema.methods.validateToken = function(token) {
+  console.log(`Validating token ${token}`);
   var verify = new totp.TotpAuth(this.totp_secret).verify(token);
   return verify !== null && verify.delta === 0;
 };

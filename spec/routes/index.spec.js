@@ -504,7 +504,7 @@ describe('enable tfa via sms', function() {
           })
           .end(function(err2, res2) {
             //TODO improve this test using spy
-            var token = new totp.TotpAuth().generate();
+            var token = new totp.TotpAuth('R6LPJTVQXJFRYNDJ').generate();
 
             testSession
             .post('/enable-tfa-via-sms')
