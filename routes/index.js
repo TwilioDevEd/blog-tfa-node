@@ -58,7 +58,8 @@ router.get('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
 
 router.post('/verify-tfa/', (req, res, next) => {
   var data = buildData(req);
-  User.findByUsername(req.session.username, (err, user) => {
+  User.findByUsername(req.session.username)
+  .then((user) => {
     data.opts.user = user;
     if (req.session.username === undefined) {
       data.opts['user-no-username'] = true;
@@ -77,7 +78,8 @@ router.post('/verify-tfa/', (req, res, next) => {
         res.render('verify_tfa.jade', data);
       }
     }
-  });
+  })
+  .catch((err) => next(err));
 });
 
 router.post('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
@@ -85,17 +87,20 @@ router.post('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
   var phoneNumber = req.body['phone_number'];
   var token = req.body.token;
 
-  User.findByUsername(data.opts.user.username, (err, user) => {
+  User.findByUsername(data.opts.user.username)
+  .then((user) => {
     if (phoneNumber) {
       user['phone_number'] = phoneNumber;
-      user.save((err, updatedUser) => {
+      user.save()
+      .then((updatedUser) => {
         User.sendSms(user.username, (sentSmsUser, smsSent) => {
           data.opts.user = sentSmsUser;
           data.opts['sms_sent'] = smsSent;
           data.opts['phone_number_updated'] = true;
           res.render('enable_tfa_via_sms.jade', data);
         });
-      });
+      })
+      .catch((err) => next(err));
     } else if (token && user.validateToken(token)) {
       user.totp_enabled_via_sms = true;
       user.save((err, result) => {
@@ -106,14 +111,16 @@ router.post('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
       data.opts['token_error'] = true;
       res.render('enable_tfa_via_sms.jade', data);
     }
-  });
+  })
+  .catch((err) => next(err));
 });
 
 router.post('/enable-tfa-via-app/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   var token = req.body.token;
-  User.findByUsername(data.opts.user.username, (err, user) => {
+  User.findByUsername(data.opts.user.username)
+  .then((user) => {
     if (token && user.validateToken(token)) {
       user.totp_enabled_via_app = true;
       User.update(user, (err, result) => {
@@ -124,11 +131,13 @@ router.post('/enable-tfa-via-app/', loginRequired, (req, res, next) => {
       data.opts['token_error'] = true;
       res.render('enable_tfa_via_app.jade', data);
     }
-  });
+  })
+  .catch((err) => next(err));
 });
 
 router.post('/', (req, res, next) => {
-  User.findByUsername(req.body.username, (err, user) => {
+  User.findByUsername(req.body.username)
+  .then((user) => {
     var data = buildData(req);
     if (!user) {
       data.opts['invalid_username_or_password'] = true;
@@ -150,12 +159,14 @@ router.post('/', (req, res, next) => {
         }
       });
     }
-  });
+  })
+  .catch((err) => next(err));
 });
 
 router.post('/sign-up/', (req, res, next) => {
   var data = buildData(req);
-  User.findByUsername(req.body.username, (err, result) => {
+  User.findByUsername(req.body.username)
+  .then((result) => {
     if (result) {
       data.opts['username_exists'] = true;
       res.render('sign_up.jade', data);
@@ -168,7 +179,8 @@ router.post('/sign-up/', (req, res, next) => {
         res.redirect('/user/');
       });
     }
-  });
+  })
+  .catch((err) => next(err));
 });
 
 module.exports = router;

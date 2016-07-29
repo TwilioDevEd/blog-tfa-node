@@ -5,7 +5,6 @@ var bcrypt = require('bcrypt-nodejs')
   , mongoose = require('mongoose')
   , twilioClient = require('twilio')()
   , base32 = require('thirty-two');
-;
 
 var schema = new mongoose.Schema({
   username: { type: String, unique: true, required: true, dropDups: true },
@@ -16,18 +15,21 @@ var schema = new mongoose.Schema({
   password_hash: String
 });
 
-schema.statics.buildAndCreate = function(username, password, callback) {
+schema.statics.buildAndCreate = function(username, password, callback, fallback) {
   bcrypt.hash(password, null, null, (err, hash) => {
     this.create({
       'username': username,
       'password_hash': hash,
       'totp_secret': totp.secret//TODO change this
-    }, callback);
+    })
+    .then(callback)
+    .catch(fallback);
   });
-}
+};
 
-schema.statics.sendSms = function(username, callback) {
-  this.findByUsername(username, (err, user) => {
+schema.statics.sendSms = function(username, callback, fallback) {
+  return this.findByUsername(username)
+  .then((user) => {
     var token = new totp.TotpAuth(user.totp_secret).generate();
     var msg = `Use this code to log in: ${token}`;
     console.log(msg);
@@ -35,7 +37,7 @@ schema.statics.sendSms = function(username, callback) {
       to: user.phone_number,
       from: process.env.TWILIO_PHONE_NUMBER,
       body: msg
-    }, function(err, message) {
+    }, (err, message) => {
       if (!err) {
         callback(user, true);
       } else {
@@ -44,11 +46,12 @@ schema.statics.sendSms = function(username, callback) {
         callback(user, false);
       }
     });
-  });
+  })
+  .catch(fallback);
 };
 
 schema.statics.findByUsername = function(username, callback) {
-  this.findOne({'username': username.toLowerCase()}, callback);
+  return this.findOne({'username': username.toLowerCase()}, callback);
 }
 
 schema.statics.qrcodeUri = function(user) {
