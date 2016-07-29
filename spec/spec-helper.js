@@ -5,10 +5,10 @@ var mongoose = require('mongoose')
 
 mongoose.Promise = global.Promise;
 
-before(function (done) {
+before((done) => {
   mongoose.connect(config.dbConnection, done);
 });
 
-after(function (done) {
+after((done) => {
   mongoose.disconnect(done);
 });

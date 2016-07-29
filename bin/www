@@ -93,3 +93,5 @@ function onListening() {
 }
 
 mongoose.connect(config.dbConnection);
+mongoose.Promise = global.Promise;
+

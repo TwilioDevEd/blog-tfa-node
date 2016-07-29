@@ -1,24 +1,6 @@
 'use strict';
 
-var mockery = require('mockery');
-
-mockery.enable();
-mockery.warnOnUnregistered(false);
-mockery.registerMock('twilio', function() {
-  return {
-    sms: {
-      messages: {
-        create: function(opts, callback) {
-          if (opts.to === 'FAKE') {
-            callback('error fake number', undefined);
-          } else {
-            callback(undefined, 'default message');
-          }
-        }
-      }
-    }
-  };
-});
+require('../mock-twilio');
 
 var expect = require('chai').expect
   , supertest = require('supertest-session')
@@ -32,16 +14,24 @@ var testSession = null;
 
 require('../spec-helper');
 
-beforeEach(function () {
+beforeEach(() => {
   testSession = supertest(app);
 });
 
-describe('default route', function () {
-  describe('GET /', function () {
-    it('responds with 200 OK', function (done) {
-      testSession.get('/')
-      .expect(function (res) {
+// remove/add users
+beforeEach((done) => {
+  User.remove({}, () => {
+    User.create(users, (err, result) => {
+      done();
+    });
+  });
+});
 
+describe('default route', () => {
+  describe('GET /', () => {
+    it('responds with 200 OK', (done) => {
+      testSession.get('/')
+      .expect((res) => {
           var $ = cheerio.load(res.text);
           expect($('.well div h1').text()).to.equal('Don\'t have an account?');
           expect($('button.btn').text()).to.equal('Log in');
@@ -56,24 +46,17 @@ describe('default route', function () {
 
 });
 
-describe('sign in', function () {
-  beforeEach(function (done) {
-      User.remove({}, function() {
-        User.create(users, function(err, result) {
-          done();
-        });
-      });
-    });
+describe('sign in', () => {
     
-  describe('with badpassword', function () {
-    it('responds with alert Incorrect Username or Password', function (done) {
+  describe('with badpassword', () => {
+    it('responds with alert Incorrect Username or Password', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'badpassword'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text); 
           expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
@@ -82,15 +65,15 @@ describe('sign in', function () {
     });
   });
 
-  describe('with bad user', function () {
-    it('responds with alert Incorrect Username or Password', function (done) {
+  describe('with bad user', () => {
+    it('responds with alert Incorrect Username or Password', (done) => {
       testSession
         .post('/')
         .send({
           username: 'baduser',
           password: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
@@ -99,15 +82,15 @@ describe('sign in', function () {
     });
   });
 
-  describe('with bad user and bad password', function () {
-    it('responds with alert Incorrect Username or Password', function (done) {
+  describe('with bad user and bad password', () => {
+    it('responds with alert Incorrect Username or Password', (done) => {
       testSession
         .post('/')
         .send({
           username: 'baduser',
           password: 'badpassword'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('Incorrect Username or Password');
@@ -116,15 +99,15 @@ describe('sign in', function () {
     });
   });
 
-  describe('with correct user and password', function () {
-    it('responds with You are logged in', function (done) {
+  describe('with correct user and password', () => {
+    it('responds with You are logged in', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(302);
           expect(res.header.location).to.equal('/user/');
           done();
@@ -132,15 +115,15 @@ describe('sign in', function () {
     });
   });
 
-  describe('with correct user (case insensitive) and password', function () {
-    it('responds with You are logged in', function (done) {
+  describe('with correct user (case insensitive) and password', () => {
+    it('responds with You are logged in', (done) => {
       testSession
         .post('/')
         .send({
           username: 'UsEr',
           password: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(302);
           expect(res.header.location).to.equal('/user/');
           done();
@@ -148,15 +131,15 @@ describe('sign in', function () {
     });
   });
 
-  describe('with sms enabled', function () {
-    it('responds with "Verify TFA" page', function (done) {
+  describe('with sms enabled', () => {
+    it('responds with "Verify TFA" page', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user.app_no.sms_yes',
           password: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(302);
           expect(res.header.location).to.equal('/verify-tfa/');
           done();
@@ -165,9 +148,9 @@ describe('sign in', function () {
   });
 });
 
-describe('sign up', function () {
-  describe('with passwords not matching', function () {
-    it('responds with "Passwords do not match" message', function (done) {
+describe('sign up', () => {
+  describe('with passwords not matching', () => {
+    it('responds with "Passwords do not match" message', (done) => {
       testSession
         .post('/sign-up/')
         .send({
@@ -175,7 +158,7 @@ describe('sign up', function () {
           password1: 'password',
           password2: 'passwordddddd'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('Passwords do not match');
@@ -184,8 +167,8 @@ describe('sign up', function () {
     });
   });
 
-  describe('with correct user and password', function () {
-    it('redirects to "/user/"', function (done) {
+  describe('with correct user and password', () => {
+    it('redirects to "/user/"', (done) => {
       testSession
         .post('/sign-up/')
         .send({
@@ -193,7 +176,7 @@ describe('sign up', function () {
           password1: 'password',
           password2: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(302);
           expect(res.header.location).to.equal('/user/');
           done();
@@ -201,8 +184,8 @@ describe('sign up', function () {
     });
   });
 
-  describe('with username that already exists', function () {
-    it('redirects to "/user/"', function (done) {
+  describe('with username that already exists', () => {
+    it('redirects to "/user/"', (done) => {
       testSession
         .post('/sign-up/')
         .send({
@@ -210,7 +193,7 @@ describe('sign up', function () {
           password1: 'password',
           password2: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('That username is already in use');
@@ -219,8 +202,8 @@ describe('sign up', function () {
     });
   });
 
-  describe('with username (case insensitive) that already exists', function () {
-    it('redirects to "/user/"', function (done) {
+  describe('with username (case insensitive) that already exists', () => {
+    it('redirects to "/user/"', (done) => {
       testSession
         .post('/sign-up/')
         .send({
@@ -228,7 +211,7 @@ describe('sign up', function () {
           password1: 'password',
           password2: 'password'
         })
-        .end(function(err, res){
+        .end((err, res) => {
           expect(res.statusCode).to.equal(200);
           var $ = cheerio.load(res.text);
           expect($('.alert.alert-error').text()).to.contain('That username is already in use');
@@ -238,18 +221,18 @@ describe('sign up', function () {
   });
 });
 
-describe('sign in', function() {
-  describe('when I access /user/ after sign in', function() {
-    it('responds with enable buttons', function (done) {
+describe('sign in', () => {
+  describe('when I access /user/ after sign in', () => {
+    it('responds with enable buttons', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           testSession.get(res.header.location)
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             var $ = cheerio.load(res2.text);
             expect($('a.btn').eq(0).text()).to.contain('Enable app based authentication');
             expect($('a.btn').eq(1).text()).to.contain('Enable SMS based authentication');
@@ -260,17 +243,17 @@ describe('sign in', function() {
     });
   });
 
-  describe('when I access /user/ after sign in with app-> false, sms->false', function() {
-    it('responds with you are logged in', function (done) {
+  describe('when I access /user/ after sign in with app-> false, sms->false', () => {
+    it('responds with you are logged in', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user.app_no.sms_no',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           testSession.get(res.header.location)
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             var $ = cheerio.load(res2.text);
             expect($('.container div h1').text()).to.contain('You are logged in');
             done();
@@ -279,19 +262,19 @@ describe('sign in', function() {
     });
   });
 
-  describe('when I access sign in with app-> yes, sms->false', function() {
-    it('redirects to /verify-tfa/ page with google authenticator', function (done) {
+  describe('when I access sign in with app-> yes, sms->false', () => {
+    it('redirects to /verify-tfa/ page with google authenticator', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user.app_yes.sms_no',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             var $ = cheerio.load(res2.text);  
             expect(res2.text).to.not.contain('You are logged in');
             expect(res2.text).to.contain('Account Verification');
@@ -304,19 +287,19 @@ describe('sign in', function() {
     });
   });
 
-  describe('when I access sign in with app-> false, sms-> true', function() {
-    it('redirects to /verify-tfa/ page with "sms was sent" message', function (done) {
+  describe('when I access sign in with app-> false, sms-> true', () => {
+    it('redirects to /verify-tfa/ page with "sms was sent" message', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user.app_no.sms_yes',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             var $ = cheerio.load(res2.text);  
             expect(res2.text).to.not.contain('You are logged in');
             expect(res2.text).to.contain('Account Verification');
@@ -329,19 +312,19 @@ describe('sign in', function() {
     });
   });
 
-  describe('when I access sign in with app-> true, sms-> true', function() {
-    it('redirects to /verify-tfa/ page with "Google Authenticator" + "sms was sent" messages', function (done) {
+  describe('when I access sign in with app-> true, sms-> true', () => {
+    it('redirects to /verify-tfa/ page with "Google Authenticator" + "sms was sent" messages', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user.app_yes.sms_yes',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           expect(res.header.location).to.equal('/verify-tfa/');
 
           testSession.get(res.header.location)
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             var $ = cheerio.load(res2.text);  
             expect(res2.text).to.not.contain('You are logged in');
             expect(res2.text).to.contain('Account Verification');
@@ -356,20 +339,20 @@ describe('sign in', function() {
 
 });
 
-describe('enable tfa via app', function() {
-  describe('get /enable-tfa-via-app/', function() {
-    it('shows google authenticator instructions', function(done) {
+describe('enable tfa via app', () => {
+  describe('get /enable-tfa-via-app/', () => {
+    it('shows google authenticator instructions', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
 
           testSession
           .get('/enable-tfa-via-app')
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             expect(res2.statusCode).to.equal(200);
             expect(res2.text).to.contain('Install Google Authenticator');
             expect(res2.text).to.contain('Open the Google Authenticator app');
@@ -385,22 +368,22 @@ describe('enable tfa via app', function() {
     });
   });
 
-  describe('post /enable-tfa-via-app/ with correct token', function() {
-    it('shows "You are setup via Google Authenticator"', function(done) {
+  describe('post /enable-tfa-via-app/ with correct token', () => {
+    it('shows "You are setup via Google Authenticator"', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
-          User.findOne({'username': 'user'}, function(err, result) {
+        .end((err, res) => {
+          User.findOne({'username': 'user'}, (err, result) => {
             testSession
             .post('/enable-tfa-via-app')
             .send({
               token: new totp.TotpAuth(result.totp_secret).generate()
             })
-            .end(function(err2, res2) {
+            .end((err2, res2) => {
               expect(res2.statusCode).to.equal(200);
               expect(res2.text).to.contain('You are set up');
               expect(res2.text).to.contain('via Google Authenticator');
@@ -411,22 +394,22 @@ describe('enable tfa via app', function() {
     });
   });
 
-  describe('post /enable-tfa-via-app/ with wrong token', function() {
-    it('shows "There was an error verifying your token"', function(done) {
+  describe('post /enable-tfa-via-app/ with wrong token', () => {
+    it('shows "There was an error verifying your token"', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
-          User.findOne({'username': 'user'}, function(err, result) {
+        .end((err, res) => {
+          User.findOne({'username': 'user'}, (err, result) => {
             testSession
             .post('/enable-tfa-via-app')
             .send({
               token: '-1'
             })
-            .end(function(err2, res2) {
+            .end((err2, res2) => {
               expect(res2.statusCode).to.equal(200);
               expect(res2.text).to.contain('There was an error verifying your token');
               done();
@@ -437,22 +420,22 @@ describe('enable tfa via app', function() {
   });
 });
 
-describe('enable tfa via sms', function() {
-  describe('send phone number to /enable-tfa-via-sms/', function() {
-    it('shows sms instructions', function(done) {
+describe('enable tfa via sms', () => {
+  describe('send phone number to /enable-tfa-via-sms/', () => {
+    it('shows sms instructions', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
             'phone_number': '+14155551212'
           })
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             expect(res2.statusCode).to.equal(200);
             expect(res2.text).to.contain('Enter your mobile phone number');
             expect(res2.text).to.contain('A 6-digit verification code will be sent');
@@ -465,21 +448,21 @@ describe('enable tfa via sms', function() {
     });
   });
 
-  describe('send wrong phone number', function() {
-    it('show error message', function(done) {
+  describe('send wrong phone number', () => {
+    it('show error message', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
             'phone_number': 'FAKE'
           })
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             expect(res2.statusCode).to.equal(200);
             expect(res2.text).to.contain('There was an error sending');
             done();
@@ -488,21 +471,21 @@ describe('enable tfa via sms', function() {
     });
   });
 
-  describe('send correct token to /enable-tfa-via-sms/', function() {
-    it('shows "you are set up" msg', function(done) {
+  describe('send correct token to /enable-tfa-via-sms/', () => {
+    it('shows "you are set up" msg', (done) => {
       testSession
         .post('/')
         .send({
           username: 'user',
           password: 'password'
         })
-        .end(function(err, res) {
+        .end((err, res) => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
             'phone_number': '+14155551212'
           })
-          .end(function(err2, res2) {
+          .end((err2, res2) => {
             //TODO improve this test using spy
             var token = new totp.TotpAuth('R6LPJTVQXJFRYNDJ').generate();
 
@@ -511,7 +494,7 @@ describe('enable tfa via sms', function() {
             .send({
               'token': token
             })
-            .end(function(err2, res2) {
+            .end((err2, res2) => {
               expect(res2.statusCode).to.equal(200);
               expect(res2.text).to.contain('You are set up');
               expect(res2.text).to.contain('via Twilio SMS');
@@ -524,19 +507,19 @@ describe('enable tfa via sms', function() {
   });
 });
 
-describe('verify tfa sms enabled', function() {
-  describe('when submits valid token', function() {
-    it('logins', function(done) {
+describe('verify tfa sms enabled', () => {
+  describe('when submits valid token', () => {
+    it('logins', (done) => {
       testSession
       .post('/')
       .send({
         username: 'user.app_no.sms_yes',
         password: 'password'
       })
-      .end(function(err, res) {
+      .end((err, res) => {
         testSession
         .get('/verify-tfa/')
-        .end(function(err2, res2){
+        .end((err2, res2) => {
           expect(res2.statusCode).to.equal(200);
           expect(res2.text).to.contain('The SMS that was just sent to you');
           //TODO improve this test using spy
@@ -544,7 +527,7 @@ describe('verify tfa sms enabled', function() {
           testSession
           .post('/verify-tfa/')
           .send({'token': token})
-          .end(function(err3, res3) {
+          .end((err3, res3) => {
             expect(res3.statusCode).to.equal(302);
             expect(res3.header.location).to.equal('/user/');
             done();
@@ -554,18 +537,18 @@ describe('verify tfa sms enabled', function() {
     });
   });
 
-  describe('when submits invalid token', function() {
-    it('show token is invalid message', function(done) {
+  describe('when submits invalid token', () => {
+    it('show token is invalid message', (done) => {
       testSession
       .post('/')
       .send({
         username: 'user.app_no.sms_yes',
         password: 'password'
       })
-      .end(function(err, res) {
+      .end((err, res) => {
         testSession
         .get('/verify-tfa/')
-        .end(function(err2, res2){
+        .end((err2, res2) => {
           expect(res2.statusCode).to.equal(200);
           expect(res2.text).to.contain('The SMS that was just sent to you');
           //TODO improve this test using spy
@@ -573,7 +556,7 @@ describe('verify tfa sms enabled', function() {
           testSession
           .post('/verify-tfa/')
           .send({'token': token})
-          .end(function(err3, res3) {
+          .end((err3, res3) => {
             expect(res3.statusCode).to.equal(200);
             expect(res3.text).to.contain('There was an error verifying your token');
             done();

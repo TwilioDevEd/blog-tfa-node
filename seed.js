@@ -6,11 +6,11 @@ var mongoose = require('mongoose')
   , users = require('./users-data')
   , _ = require('underscore');
 
-mongoose.connect(config.dbConnection, function(err) {
+mongoose.connect(config.dbConnection, (err) => {
   if (err) throw new Error(err);
 
-  User.remove({}, function() {
-    User.create(users, function(err, result) {
+  User.remove({}, () => {
+    User.create(users, (err, result) => {
       if (err) throw new Error(err);
       console.log('Data loaded succesfully!');
       mongoose.disconnect();
