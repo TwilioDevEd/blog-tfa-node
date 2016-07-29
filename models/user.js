@@ -60,7 +60,7 @@ schema.statics.qrcodeUri = function(user) {
 schema.methods.validateToken = function(token) {
   console.log(`Validating token ${token}`);
   var verify = new totp.TotpAuth(this.totp_secret).verify(token);
-  return verify !== null && verify.delta === 0;
+  return verify !== null;
 };
 
 schema.methods.validatePassword = function(pass, callback) {
