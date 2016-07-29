@@ -2,7 +2,8 @@
 
 var express = require('express')
   , router = express.Router()
-  , User = require('../models/user');
+  , User = require('../models/user')
+  , sendSms = require('../lib/sms-sender');
 
 var loginRequired = (req, res, next) => {
   var data = buildData(req);
@@ -33,7 +34,7 @@ router.get('/logout/', (req, res, next) => {
 
 router.get('/verify-tfa/', (req, res, next) => {
   var data = buildData(req);
-  User.sendSms(req.session.username, (user, smsSent) => {
+  sendSms(req.session.username, (user, smsSent) => {
     data.opts['sms_sent'] = smsSent;
     data.opts.user = user;
     res.render('verify_tfa.jade', data);
@@ -93,7 +94,7 @@ router.post('/enable-tfa-via-sms/', loginRequired, (req, res, next) => {
       user['phone_number'] = phoneNumber;
       user.save()
       .then((updatedUser) => {
-        User.sendSms(user.username, (sentSmsUser, smsSent) => {
+        sendSms(user.username, (sentSmsUser, smsSent) => {
           data.opts.user = sentSmsUser;
           data.opts['sms_sent'] = smsSent;
           data.opts['phone_number_updated'] = true;
