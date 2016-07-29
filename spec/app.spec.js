@@ -1,18 +1,18 @@
 'use strict';
 
-require('../mock-twilio');
+require('./mock-twilio');
 
 var expect = require('chai').expect
   , supertest = require('supertest-session')
   , cheerio = require('cheerio')
-  , users = require('../../users-data.json')
-  , User = require('../../models/user')
-  , app = require('../../app')
-  , totp = require('../../lib/totp');
+  , users = require('../users-data.json')
+  , User = require('../models/user')
+  , app = require('../app')
+  , totp = require('../lib/totp');
 
 var testSession = null;
 
-require('../spec-helper');
+require('./spec-helper');
 
 beforeEach(() => {
   testSession = supertest(app);

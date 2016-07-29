@@ -15,11 +15,12 @@ var schema = new mongoose.Schema({
 });
 
 schema.statics.buildAndCreate = function(username, password, callback, fallback) {
+  var self = this;
   bcrypt.hash(password, null, null, (err, hash) => {
-    this.create({
+    self.create({
       'username': username,
       'password_hash': hash,
-      'totp_secret': totp.secret//TODO change this
+      'totp_secret': totp.generateSecret() //TODO change this
     })
     .then(callback)
     .catch(fallback);
@@ -33,7 +34,7 @@ schema.statics.findByUsername = function(username, callback) {
 schema.statics.qrcodeUri = function(user) {
   var encoded = base32.encode(user.totp_secret);
   var encodedForGoogle = encoded.toString().replace(/=/g,'');
-  return `otpauth://totp/somelabel?secret=${encodedForGoogle}`;
+  return `otpauth://totp/${user.username}?secret=${encodedForGoogle}`;
 }
 
 schema.methods.validateToken = function(token) {
