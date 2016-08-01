@@ -14,45 +14,18 @@ The best way to see how this is done is to look at some code. Let's do that now.
 
 Here are the topics that I'll be covering:
 <ol>
-<ol>
   <li><b>An Example of Application</b>
 I will start with a very basic Node.js application that implements password authentication and build from there.</li>
-</ol>
-</ol>
-&nbsp;
-<ol>
-<ol>
   <li><b>Understanding TOTP</b>
 Before I show you how to add TOTP to that example application, I'll explain how TOTP works.</li>
-</ol>
-</ol>
-&nbsp;
-<ol>
-<ol>
   <li><b>Adding Two-Factor Authentication</b>
 Now that we know more about how TOTP works, I'll show you how to add it to the example application that we started with.</li>
-</ol>
-</ol>
-&nbsp;
-<ol>
-<ol>
   <li><b>Adding Google Authenticator</b>
 Here I will show you how to enable your users to authenticate via the Google Authenticator.</li>
-</ol>
-</ol>
-&nbsp;
-<ol>
-<ol>
   <li><b>Adding Twilio</b>
 Here I will show you how to enable your users to authenticate using a code that is delivered to their phone via SMS.</li>
-</ol>
-</ol>
-&nbsp;
-<ol>
-<ol>
   <li><b>Try It Out Yourself</b>
 Finally, I give you a working example of a site that can use both the Google Authenticator and SMS to do two-factor authentication.</li>
-</ol>
 </ol>
 &nbsp;
 <h3>An Example of An Application</h3>
