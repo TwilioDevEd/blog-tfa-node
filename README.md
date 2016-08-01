@@ -10,7 +10,7 @@
 
 1. [Node](http://nodejs.org/)
 1. [MongoDb](http://docs.mongodb.org/manual/installation/)
-1. A Twilio account with a verified [phone number][https://www.twilio.com/console/phone-numbers/incoming]. (Get a
+1. A Twilio account with a verified [phone number](https://www.twilio.com/console/phone-numbers/incoming). (Get a
    [free account](https://www.twilio.com/try-twilio?utm_campaign=tutorials&utm_medium=readme)
    here.) If you are using a Twilio Trial Account, you can learn all about it
    [here](https://www.twilio.com/help/faq/twilio-basics/how-does-twilios-free-trial-work).
