@@ -4,25 +4,7 @@ block content
   .container
     div
       h1 You are logged in.
-      p
-        | Now that you are logged in, try adding your two-factor auth to your account
-        | via an application or via SMS.
     .row
       .span6
         <!-- Source: http://openclipart.org/detail/176289/top-secret-by-joshbressers-176289 -->
         img(src='/static/img/top-secret.png')
-      .span6
-        a.btn(href='/enable-tfa-via-app') Enable app based authentication
-        div
-          p
-            | For apps like "Google Authenticator".
-            if opts.user.totp_enabled_via_app
-              br
-              | (Enabled)
-        a.btn(href='/enable-tfa-via-sms') Enable SMS based authentication
-        div
-          p
-            | For any phone that can recieve SMS messages.
-            if opts.user.totp_enabled_via_sms
-              br
-              | (Enabled for #{opts.user.phone_number})

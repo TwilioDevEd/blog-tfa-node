@@ -25,14 +25,8 @@ router.post('/', (req, res, next) => {
           data.opts.invalidUsernameOrPassword = true;
           res.render('main_page.pug', data);
         } else {
-          if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
-            req.session.username = user.username;
-            req.session.stage = 'password-validated';
-            res.redirect('/verify-tfa/');
-          } else {
-            req.session.user = user;
-            res.redirect('/user/');
-          }
+          req.session.user = user;
+          res.redirect('/user/');
         }
       });
     }

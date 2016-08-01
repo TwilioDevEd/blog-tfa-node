@@ -1,16 +1,11 @@
 'use strict';
 
 var bcrypt = require('bcrypt-nodejs')
-  , totp = require('../lib/totp')
-  , mongoose = require('mongoose')
-  , base32 = require('thirty-two');
+  , mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
   username: { type: String, unique: true, required: true, dropDups: true },
-  totp_secret: String,
-  totp_enabled_via_app: Boolean,
   phone_number: String,
-  totp_enabled_via_sms: Boolean,
   password_hash: String
 });
 
@@ -19,8 +14,7 @@ schema.statics.buildAndCreate = function(username, password, callback, fallback)
   bcrypt.hash(password, null, null, (err, hash) => {
     self.create({
       'username': username,
-      'password_hash': hash,
-      'totp_secret': totp.generateSecret()
+      'password_hash': hash
     })
     .then(callback)
     .catch(fallback);
@@ -29,12 +23,6 @@ schema.statics.buildAndCreate = function(username, password, callback, fallback)
 
 schema.statics.findByUsername = function(username, callback) {
   return this.findOne({'username': username.toLowerCase()}, callback);
-};
-
-schema.statics.qrcodeUri = function(user) {
-  var encoded = base32.encode(user.totp_secret);
-  var encodedForGoogle = encoded.toString().replace(/=/g,'');
-  return `otpauth://totp/${user.username}?secret=${encodedForGoogle}`;
 };
 
 schema.methods.validateToken = function(token) {
