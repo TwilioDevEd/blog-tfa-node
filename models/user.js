@@ -20,7 +20,7 @@ schema.statics.buildAndCreate = function(username, password, callback, fallback)
     self.create({
       'username': username,
       'password_hash': hash,
-      'totp_secret': totp.generateSecret() //TODO change this
+      'totp_secret': totp.generateSecret()
     })
     .then(callback)
     .catch(fallback);
