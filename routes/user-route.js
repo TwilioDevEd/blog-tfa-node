@@ -8,7 +8,7 @@ var express = require('express')
 // GET /user/
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  res.render('user.jade', data);
+  res.render('user.pug', data);
 });
 
 module.exports = router;

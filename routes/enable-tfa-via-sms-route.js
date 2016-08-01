@@ -10,7 +10,7 @@ var express = require('express')
 // GET /enable-tfa-via-sms/
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  res.render('enable_tfa_via_sms.jade', data);  
+  res.render('enable_tfa_via_sms.pug', data);  
 });
 
 // POST //enable-tfa-via-sms/
@@ -29,7 +29,7 @@ router.post('/', loginRequired, (req, res, next) => {
           data.opts.user = sentSmsUser;
           data.opts.smsSent = smsSent;
           data.opts.phone_number_updated = true;
-          res.render('enable_tfa_via_sms.jade', data);
+          res.render('enable_tfa_via_sms.pug', data);
         });
       })
       .catch((err) => next(err));
@@ -38,11 +38,11 @@ router.post('/', loginRequired, (req, res, next) => {
       user.save((err, result) => {
         data.opts.user = user;
         req.session.user = user;
-        res.render('enable_tfa_via_sms.jade', data);
+        res.render('enable_tfa_via_sms.pug', data);
       });
     } else {
       data.opts.tokenError = true;
-      res.render('enable_tfa_via_sms.jade', data);
+      res.render('enable_tfa_via_sms.pug', data);
     }
   })
   .catch((err) => next(err));

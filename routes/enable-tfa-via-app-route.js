@@ -10,7 +10,7 @@ var express = require('express')
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
-  res.render('enable_tfa_via_app.jade', data);
+  res.render('enable_tfa_via_app.pug', data);
 });
 
 // POST /enable-tfa-via-app/
@@ -25,12 +25,12 @@ router.post('/', loginRequired, (req, res, next) => {
       .then((updatedUser) => {
         req.session.user.totp_enabled_via_app = true;
         data.opts.user = req.session.user;
-        res.render('enable_tfa_via_app.jade', data);
+        res.render('enable_tfa_via_app.pug', data);
       })
       .catch((updateErr) => next(updateErr));
     } else {
       data.opts.tokenError = true;
-      res.render('enable_tfa_via_app.jade', data);
+      res.render('enable_tfa_via_app.pug', data);
     }
   })
   .catch((err) => next(err));

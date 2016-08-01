@@ -8,7 +8,7 @@ var express = require('express')
 // GET /sign-up/
 router.get('/', (req, res, next) => {
   var data = buildData(req);
-  res.render('sign_up.jade', data);
+  res.render('sign_up.pug', data);
 });
 
 // POST /sign-up/
@@ -18,10 +18,10 @@ router.post('/', (req, res, next) => {
   .then((result) => {
     if (result) {
       data.opts.usernameExists = true;
-      res.render('sign_up.jade', data);
+      res.render('sign_up.pug', data);
     } else if (req.body.password1 != req.body.password2) {
       data.opts.passwordsDoNotMatch = true;
-      res.render('sign_up.jade', data);
+      res.render('sign_up.pug', data);
     } else {
       User.buildAndCreate(req.body.username, req.body.password1, (user) => {
         req.session.user = user;

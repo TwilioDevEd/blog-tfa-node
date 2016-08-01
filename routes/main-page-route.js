@@ -8,7 +8,7 @@ var express = require('express')
 // GET /
 router.get('/', (req, res, next) => {
   var data = buildData(req);
-  res.render('main_page.jade', data);
+  res.render('main_page.pug', data);
 });
 
 // POST /
@@ -18,12 +18,12 @@ router.post('/', (req, res, next) => {
     var data = buildData(req);
     if (!user) {
       data.opts.invalidUsernameOrPassword = true;
-      res.render('main_page.jade', data);
+      res.render('main_page.pug', data);
     } else {
       user.validatePassword(req.body.password, (err, isValid) => {
         if (!isValid) {
           data.opts.invalidUsernameOrPassword = true;
-          res.render('main_page.jade', data);
+          res.render('main_page.pug', data);
         } else {
           if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
             req.session.username = user.username;

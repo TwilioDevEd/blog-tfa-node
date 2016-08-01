@@ -12,7 +12,7 @@ router.get('/', (req, res, next) => {
   sendSms(req.session.username, (user, smsSent) => {
     data.opts.sms_sent = smsSent;
     data.opts.user = user;
-    res.render('verify_tfa.jade', data);
+    res.render('verify_tfa.pug', data);
   });
 });
 
@@ -24,10 +24,10 @@ router.post('/', (req, res, next) => {
     data.opts.user = user;
     if (req.session.username === undefined) {
       data.opts.errorNoUsername = true;
-      res.render('verify_tfa.jade', data);
+      res.render('verify_tfa.pug', data);
     } else if (req.session.stage !== 'password-validated') {
       data.opts.errorUnverifiedPassword = true;
-      res.render('verify_tfa.jade', data); 
+      res.render('verify_tfa.pug', data); 
     } else {
       var token = req.body.token;
       if (token && user.validateToken(token)) {
@@ -36,7 +36,7 @@ router.post('/', (req, res, next) => {
         res.redirect('/user/');
       } else {
         data.opts.errorInvalidToken = true;
-        res.render('verify_tfa.jade', data);
+        res.render('verify_tfa.pug', data);
       }
     }
   })
