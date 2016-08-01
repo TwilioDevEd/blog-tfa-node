@@ -19,6 +19,7 @@
     "morgan": "~1.7.0",
     "notp": "^2.0.3",
     "pug": "^2.0.0-beta4",
+    "qr-image": "^3.1.0",
     "randomstring": "^1.1.5",
     "serve-favicon": "~2.3.0",
     "thirty-two": "^1.0.2",

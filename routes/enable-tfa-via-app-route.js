@@ -9,14 +9,12 @@ var express = require('express')
 // GET /enable-tfa-via-app/
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   res.render('enable_tfa_via_app.pug', data);
 });
 
 // POST /enable-tfa-via-app/
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
   var token = req.body.token;
   User.findByUsername(data.opts.user.username)
   .then((user) => {
