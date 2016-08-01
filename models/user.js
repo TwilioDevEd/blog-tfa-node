@@ -25,12 +25,6 @@ schema.statics.findByUsername = function(username, callback) {
   return this.findOne({'username': username.toLowerCase()}, callback);
 };
 
-schema.methods.validateToken = function(token) {
-  console.log(`Validating token ${token}`);
-  var verify = new totp.TotpAuth(this.totp_secret).verify(token);
-  return verify !== null;
-};
-
 schema.methods.validatePassword = function(pass, callback) {
   bcrypt.compare(pass, this.password_hash, callback);
 };
