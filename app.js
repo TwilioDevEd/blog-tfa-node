@@ -1,3 +1,7 @@
+'use strict';
+
+require('dotenv').config({silent: true});
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -24,10 +28,10 @@ app.use(session({
   saveUninitialized: true
 }));
 
-app.use('/', require('./routes/main-page-route'));
-app.use('/logout/', require('./routes/logout-route'));
-app.use('/sign-up/', require('./routes/sign-up-route'));
-app.use('/user/', require('./routes/user-route'));
+app.use('/', require('./routes/main-page'));
+app.use('/logout/', require('./routes/logout'));
+app.use('/sign-up/', require('./routes/sign-up'));
+app.use('/user/', require('./routes/user'));
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

@@ -21,7 +21,7 @@ html(lang='en')
           a.brand(href='/')
             | Two-Factor Authentication Example
           ul.nav
-            if opts.isAuthenticated
+            if opts && opts.isAuthenticated
               li
                 a(href='/user')
                   | Home

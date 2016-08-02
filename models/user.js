@@ -6,7 +6,7 @@ var bcrypt = require('bcrypt-nodejs')
 var schema = new mongoose.Schema({
   username: { type: String, unique: true, required: true, dropDups: true },
   phone_number: String,
-  password_hash: String
+  passwordHash: String
 });
 
 schema.statics.buildAndCreate = function(username, password, callback, fallback) {
@@ -14,7 +14,7 @@ schema.statics.buildAndCreate = function(username, password, callback, fallback)
   bcrypt.hash(password, null, null, (err, hash) => {
     self.create({
       'username': username,
-      'password_hash': hash
+      'passwordHash': hash
     })
     .then(callback)
     .catch(fallback);
@@ -26,7 +26,7 @@ schema.statics.findByUsername = function(username, callback) {
 };
 
 schema.methods.validatePassword = function(pass, callback) {
-  bcrypt.compare(pass, this.password_hash, callback);
+  bcrypt.compare(pass, this.passwordHash, callback);
 };
 
 module.exports = mongoose.model('user', schema);
