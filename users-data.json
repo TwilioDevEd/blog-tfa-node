@@ -1,0 +1,37 @@
+[
+  {
+    "username": "user.app_no.sms_no",
+    "password_hash": "$2a$12$a7rvlb1mKlMT4xQp7qW9p.WUkKm3gluuUor8/rvUu3BcB7xWoxr1a"
+  },
+  {
+    "username": "user.app_no.sms_yes",
+    "phone_number": "+14155551212",
+    "totp_secret": "NVHWYJ4OV75YW3WC",
+    "totp_enabled_via_sms": true,
+    "password_hash": "$2a$12$X0wec23GmmicEe/eYNOM/umKJoTivALHjhg5q/qJ9LtkV4mtri9Au"
+  },
+  {
+    "username": "user.app_yes.sms_no",
+    "totp_secret": "VRZQO34R4LHUH634",
+    "totp_enabled_via_app": true,
+    "password_hash": "$2a$12$1ocOVI64R1L4vBJTLaYPjOg8PYqXzLoFPVf.vh7ZJ8QCv7U7.DIP6"
+  },
+  {
+    "username": "user.app_yes.sms_yes",
+    "totp_secret": "BOXB6K2SJCR5L7CR",
+    "totp_enabled_via_app": true,
+    "phone_number": "+14155551213",
+    "totp_enabled_via_sms": true,
+    "password_hash": "$2a$12$hW5/YxlP9RzbUN0k05.nsOtgDslFYjf34U2PH7JG6OeJacIFjx.e."
+  },
+  {
+    "username": "user2",
+    "totp_secret": "R6LPJTVQXJFRYNDJ",
+    "password_hash": "$2a$12$ISrqiMAN9JIo7zA/qbPVIuPrQN/ebVCKamM/HFth9Ka63PmyZ2S8q"
+  },
+  {
+    "username": "user",
+    "totp_secret": "R6LPJTVQXJFRYNDJ",
+    "password_hash": "$2a$12$J2dTN4wMH7nbVDgkYq/d8uTsiTw3DQHNF5Py98Mf27PJvnqkE94iK"
+  }
+]

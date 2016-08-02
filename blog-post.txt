@@ -1,0 +1,684 @@
+<a href="https://www.twilio.com/blog/2013/04/add-two-factor-authentication-to-your-website-with-google-authenticator-and-twilio-sms.html/jf-2" rel="attachment wp-att-11918"><img class="alignright size-full wp-image-11918" src="https://www.twilio.com/blog/wp-content/uploads/2013/04/jf1.jpg" alt="jf" width="288" height="162" /></a><em>Since writing this post, we’ve created a new tutorial showing you how to <a href="https://www.twilio.com/docs/tutorials/walkthrough/sms-two-factor-authentication/ruby/rails">quickly add two-factor authentication to your applications</a> updated with some more recent techniques not highlighted below.</em>
+
+<strong>Check out the newest TFA Tutorial <a href="https://www.twilio.com/docs/tutorials/walkthrough/two-factor-authentication/php/laravel">here</a></strong>
+<h3>Why Two-Factor Authentication?</h3>
+Back in the day, it used to be that enforcing a strong password policy was sufficient to prevent unauthorized access into your user's accounts. (Ah, those were the days, <a href="http://angg.twu.net/tourism.html">when kids were polite and respected their elders</a>). However, as the security landscape continues to evolve, it is becoming clear that a strong password policy is not enough any more. Today, an attacker can discover your user's password in a variety of ways: they might find your user's password on a stolen or lost computer, they might find their password on another site where your user used the same password, or your user's computer might be infected with a virus that is capturing their keystrokes.
+
+In an ideal world, we would all be authenticating ourselves using tamper-proof hardware that implements a public-key cryptographic system. In the meantime, a simple and effective way of improving the way your users authenticate themselves is a method known as "<a href="http://www.twilio.com/solutions/two-factor-authentication">Two-Factor Authentication</a>", "Two-Factor Auth", or just "TFA". Two-Factor Authentication is a method where your users are required to log in with two "factors": a password, and a code from a device that they carry on their person. That device used to be a special-purpose device, but these days that device can just as well be a mobile phone.
+
+A great pattern that we are seeing for implementing <a href="http://www.twilio.com/solutions/two-factor-authentication">two-factor authentication</a> is to use the TOTP (Time-based One-time Password Algorithm) standard for the second authentication step. What is so cool about TOTP is that it is flexible enough to allow your users to generate their authentication tokens directly on their smart phones using a TOTP app like <a href="http://support.google.com/accounts/bin/answer.py?hl=en&amp;answer=1066447">Google Authenticator</a> or have their tokens sent to their mobile phone via SMS.
+
+This means that you only need to implement and test one additional authentication scheme, but get the benefits of having two different ways that your users can get tokens.
+
+The best way to see how this is done is to look at some code. Let's do that now.
+
+Here are the topics that I'll be covering:
+<ol>
+  <li><b>An Example of Application</b>
+I will start with a very basic Node.js application that implements password authentication and build from there.</li>
+  <li><b>Understanding TOTP</b>
+Before I show you how to add TOTP to that example application, I'll explain how TOTP works.</li>
+  <li><b>Adding Two-Factor Authentication</b>
+Now that we know more about how TOTP works, I'll show you how to add it to the example application that we started with.</li>
+  <li><b>Adding Google Authenticator</b>
+Here I will show you how to enable your users to authenticate via the Google Authenticator.</li>
+  <li><b>Adding Twilio</b>
+Here I will show you how to enable your users to authenticate using a code that is delivered to their phone via SMS.</li>
+  <li><b>Try It Out Yourself</b>
+Finally, I give you a working example of a site that can use both the Google Authenticator and SMS to do two-factor authentication.</li>
+</ol>
+&nbsp;
+<h3>An Example of An Application</h3>
+Below is the code for a very basic website that only uses a username and password for authentication. We will start with this code, and then add two-factor authentication to it.
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/app.js">app.js</a>:
+
+[code language="javascript"]
+// requires ...
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: config.secret,
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.use('/', require('./routes/main-page-route'));
+app.use('/logout/', require('./routes/logout-route'));
+app.use('/sign-up/', require('./routes/sign-up-route'));
+app.use('/user/', require('./routes/user-route'));
+
+// etc...
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/config.js">config.js</a>:
+
+[code language="javascript"]
+var _ = require('underscore');
+
+var dbConnection = function() {
+  if (process.env.NODE_ENV === 'test') {
+    return 'mongodb://localhost/test';
+  }
+
+  return 'mongodb://localhost/blog-tfa';
+};
+
+var config = {
+  dbConnection: dbConnection(),
+  secret: process.env.APP_SECRET,
+  accountSid: process.env.TWILIO_ACCOUNT_SID,
+  authToken: process.env.TWILIO_AUTH_TOKEN,
+  phoneNumber: process.env.TWILIO_NUMBER
+};
+
+// ...
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/models/user.js">models/user.js</a>:
+
+[code language="javascript"]
+var bcrypt = require('bcrypt-nodejs')
+  , mongoose = require('mongoose');
+
+var schema = new mongoose.Schema({
+  username: { type: String, unique: true, required: true, dropDups: true },
+  phone_number: String,
+  password_hash: String
+});
+
+schema.statics.buildAndCreate = function(username, password, callback, fallback) {
+  var self = this;
+  bcrypt.hash(password, null, null, (err, hash) =&gt; {
+    self.create({
+      'username': username,
+      'password_hash': hash
+    })
+    .then(callback)
+    .catch(fallback);
+  });
+};
+
+schema.statics.findByUsername = function(username, callback) {
+  return this.findOne({'username': username.toLowerCase()}, callback);
+};
+
+schema.methods.validatePassword = function(pass, callback) {
+  bcrypt.compare(pass, this.password_hash, callback);
+};
+
+module.exports = mongoose.model('user', schema);
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/lib/build-data.js">lib/build-data.js</a>:
+
+[code language="javascript"]
+module.exports = (req) =&gt; {
+  return {
+    opts: {
+      user: req.session.user,
+      isAuthenticated: req.session.user !== undefined
+    }
+  };
+};
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/lib/login-required.js">lib/login-required.js</a>:
+
+[code language="javascript"]
+var buildData = require('./build-data');
+
+module.exports = (req, res, next) =&gt; {
+  var data = buildData(req);
+  if (!data.opts.isAuthenticated) {
+    console.log('Not authorized, redirecting to /');
+    res.redirect('/');
+  } else {
+    next();
+  }
+};
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/routes/main-page-route.js">routes/main-page-route.js</a>:
+
+[code language="javascript"]
+// requires ...
+
+// GET /
+router.get('/', (req, res, next) =&gt; {
+  var data = buildData(req);
+  res.render('main_page.pug', data);
+});
+
+// POST /
+router.post('/', (req, res, next) =&gt; {
+  User.findByUsername(req.body.username)
+  .then((user) =&gt; {
+    var data = buildData(req);
+    if (!user) {
+      data.opts.invalidUsernameOrPassword = true;
+      res.render('main_page.pug', data);
+    } else {
+      user.validatePassword(req.body.password, (err, isValid) =&gt; {
+        if (!isValid) {
+          data.opts.invalidUsernameOrPassword = true;
+          res.render('main_page.pug', data);
+        } else {
+          req.session.user = user;
+          res.redirect('/user/');
+        }
+      });
+    }
+  })
+  .catch((err) =&gt; next(err));
+});
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/routes/sign-up-route.js">routes/sign-up-route.js</a>:
+
+[code language="javascript"]
+// requires ...
+
+// GET /sign-up/
+router.get('/', (req, res, next) =&gt; {
+  var data = buildData(req);
+  res.render('sign_up.pug', data);
+});
+
+// POST /sign-up/
+router.post('/', (req, res, next) =&gt; {
+  var data = buildData(req);
+  User.findByUsername(req.body.username)
+  .then((result) =&gt; {
+    if (result) {
+      data.opts.usernameExists = true;
+      res.render('sign_up.pug', data);
+    } else if (req.body.password1 != req.body.password2) {
+      data.opts.passwordsDoNotMatch = true;
+      res.render('sign_up.pug', data);
+    } else {
+      User.buildAndCreate(req.body.username, req.body.password1, (user) =&gt; {
+        req.session.user = user;
+        res.redirect('/user/');
+      });
+    }
+  })
+  .catch((err) =&gt; next(err));
+});
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/routes/user-route.js">routes/user-route.js</a>:
+
+[code language="javascript"]
+// requires ...
+
+// GET /user/
+router.get('/', loginRequired, (req, res, next) =&gt; {
+  var data = buildData(req);
+  res.render('user.pug', data);
+});
+[/code]
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/no-tfa/routes/logout-route.js">routes/logout-route.js</a>:
+
+[code language="javascript"]
+// requires ...
+
+// GET /logout/
+router.get('/', (req, res, next) =&gt; {
+  req.session.destroy((err) =&gt; res.redirect('/'));
+});
+[/code]
+
+&nbsp;
+
+If you don't want to read over everything, you can just focus on the <em>main-page-router</em> module, here:
+
+[code language="javascript"]
+'use strict';
+
+var express = require('express')
+  , router = express.Router()
+  , User = require('../models/user')
+  , buildData = require('../lib/build-data');
+
+// GET /
+router.get('/', (req, res, next) => {
+  var data = buildData(req);
+  res.render('main_page.pug', data);
+});
+
+// POST /
+router.post('/', (req, res, next) => {
+  User.findByUsername(req.body.username)
+  .then((user) => {
+    var data = buildData(req);
+    if (!user) {
+      data.opts.invalidUsernameOrPassword = true;
+      res.render('main_page.pug', data);
+    } else {
+      user.validatePassword(req.body.password, (err, isValid) => {
+        if (!isValid) {
+          data.opts.invalidUsernameOrPassword = true;
+          res.render('main_page.pug', data);
+        } else {
+          req.session.user = user;
+          res.redirect('/user/');
+        }
+      });
+    }
+  })
+  .catch((err) => next(err));
+});
+
+module.exports = router;
+[/code]
+
+If you're new to Node.js or Express, here is what's going on in the code:
+
+Respectively, lines 4 and 15 tell express to register those functions as the handler for GET and POST requests for '/' (the main page).
+
+So, if it receives a GET request to this path '/', it will render the main page.
+
+However, if it receives a POST request, it will response with a another logic. We check to see if the user or password are invalid. If the user or password are not valid, then we display an error saying so. Otherwise, we log the user in.
+
+[code language="javascript"]
+User.findByUsername(req.body.username)
+  .then((user) => {
+    var data = buildData(req);
+    if (!user) {
+      data.opts.invalidUsernameOrPassword = true;
+      res.render('main_page.pug', data);
+    } else {
+      user.validatePassword(req.body.password, (err, isValid) => {
+        if (!isValid) {
+          data.opts.invalidUsernameOrPassword = true;
+          res.render('main_page.pug', data);
+        } else {
+          req.session.user = user;
+          res.redirect('/user/');
+        }
+      });
+    }
+[/code]
+
+The rest of the code in this example deals with including additional libraries, setting up the application, defining the User model and handling other website functionality.
+
+You can see the full source on GitHub here: <a href="https://github.com/Twilio-Dev-Ed/blog-tfa-node/tree/no-tfa">https://github.com/Twilio-Dev-Ed/blog-tfa-node/tree/no-tfa</a>
+
+<h3>Understanding TOTP</h3>
+Before we get started with adding two-factor authentication to this example application, let's take a quick detour and to learn more about how TOTP works.
+
+As you'll find on Wikipedia, <a href="http://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm">TOTP</a> "is an extension of the HMAC-based One Time Password algorithm HOTP to support a time based moving factor."
+
+Based on that involved explanation, you might be surprised to find that generating a one time token with TOTP is not actually very complicated. Here is how you generate a 6 digit TOTP code:
+<ol>
+  <li>Compute the 20 byte HMAC of a "shared secret" and a timecode using HMAC-SHA1.</li>
+  <li>Deterministically select an offset inside of that 20 byte HMAC.</li>
+  <li>Starting at the offset, select a 4 byte range from the 20 byte HMAC.</li>
+  <li>Turn the 4 byte range into an integer.</li>
+  <li>Divide that integer by 1,000,000 (or "10**6", the "6" is the number of digits in the TOTP code)</li>
+  <li>The remainder of that division is the 6 digit code - the TOTP code</li>
+</ol>
+If that isn't making sense, try taking a look at <a href="http://tools.ietf.org/html/rfc6238">RFC 6238</a> and this simple implementation of TOTP in Node.js below. If needed, you can cut and paste this code into a script and run it from your command line:
+
+&nbsp;
+
+&nbsp;
+<h3>Adding Two-Factor Authentication</h3>
+Now that you have a better understanding of how TOTP works, let's see how we would add it to the example web application that we started with. The first place that we'll be touching in our example above is the <i>main-page-router</i> module, here's what it looks like when it is modified to support logging in with two-factor authentication:
+
+[code language="javascript"]
+router.post('/', (req, res, next) => {
+  User.findByUsername(req.body.username)
+  .then((user) => {
+    var data = buildData(req);
+    if (!user) {
+      data.opts.invalidUsernameOrPassword = true;
+      res.render('main_page.pug', data);
+    } else {
+      user.validatePassword(req.body.password, (err, isValid) => {
+        if (!isValid) {
+          data.opts.invalidUsernameOrPassword = true;
+          res.render('main_page.pug', data);
+        } else {
+          if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
+            req.session.username = user.username;
+            req.session.stage = 'password-validated';
+            res.redirect('/verify-tfa/');
+          } else {
+            req.session.user = user;
+            res.redirect('/user/');
+          }
+        }
+      });
+    }
+  })
+  .catch((err) => next(err));
+});
+[/code]
+
+This should all look very familiar, it's all the same code as before, with some modifications at the end.
+
+Let's go over these modifications in a little more detail.
+
+Here is the code that we started out with. No big changes here.
+
+[code language="javascript"]
+router.post('/', (req, res, next) => {
+  User.findByUsername(req.body.username)
+  .then((user) => {
+    var data = buildData(req);
+    if (!user) {
+      data.opts.invalidUsernameOrPassword = true;
+      res.render('main_page.pug', data);
+    } else {
+      user.validatePassword(req.body.password, (err, isValid) => {
+        if (!isValid) {
+          data.opts.invalidUsernameOrPassword = true;
+          res.render('main_page.pug', data);
+        } else {
+          req.session.user = user;
+          res.redirect('/user/');
+        }
+      });
+    }
+  })
+  .catch((err) => next(err));
+});
+[/code]
+
+Here is where we add our modifications. We start by checking to see if the user has one enabled two-factor authentication on their account via an app or SMS.
+
+[code language="javascript"]
+if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
+  req.session.username = user.username;
+  req.session.stage = 'password-validated';
+  res.redirect('/verify-tfa/');
+} else {
+  req.session.user = user;
+  res.redirect('/user/');
+}
+[/code]
+
+If TOTP is enabled, we record the fact that the user's password has been validated into the session state, and redirect the user's browser to "/verify-tfa".
+
+Otherwise, if the user doesn't have any form of two-factor authentication enabled, then we just log them in as before.
+
+In the case where the user has two-factor authentication enabled, they will be redirected to a page to enter in their two-factor authentication token. Here is what the code behind that page looks like:
+
+[code language="javascript"]
+'use strict';
+
+var express = require('express')
+  , router = express.Router()
+  , User = require('../models/user')
+  , sendSms = require('../lib/sms-sender')
+  , buildData = require('../lib/build-data');
+
+// GET /verify-tfa/
+router.get('/', (req, res, next) => {
+  var data = buildData(req);
+  sendSms(req.session.username, (user, smsSent) => {
+    data.opts.sms_sent = smsSent;
+    data.opts.user = user;
+    res.render('verify_tfa.pug', data);
+  });
+});
+
+// POST /verify-tfa/
+router.post('/', (req, res, next) => {
+  var data = buildData(req);
+  User.findByUsername(req.session.username)
+  .then((user) => {
+    data.opts.user = user;
+    if (req.session.username === undefined) {
+      data.opts.errorNoUsername = true;
+      res.render('verify_tfa.pug', data);
+    } else if (req.session.stage !== 'password-validated') {
+      data.opts.errorUnverifiedPassword = true;
+      res.render('verify_tfa.pug', data);
+    } else {
+      var token = req.body.token;
+      if (token && user.validateToken(token)) {
+        req.session.user = user;
+        req.session.stage = 'logged-in';
+        res.redirect('/user/');
+      } else {
+        data.opts.errorInvalidToken = true;
+        res.render('verify_tfa.pug', data);
+      }
+    }
+  })
+  .catch((err) => next(err));
+});
+
+module.exports = router;
+[/code]
+
+And here's what that code does. Again, this is an express function that registers this function to handle "GET" to the "/verify-tfa" path. And if the request was a "GET" request, then we send the user an SMS with their token (if they have that configured) and then render the page prompting the user to enter their token.
+
+[code language="javascript"]
+router.get('/', (req, res, next) => {
+  var data = buildData(req);
+  sendSms(req.session.username, (user, smsSent) => {
+    data.opts.sms_sent = smsSent;
+    data.opts.user = user;
+    res.render('verify_tfa.pug', data);
+  });
+});
+[/code]
+
+To handle POST request, first it finds the user by username, and delegates the response to a callback. It does some sanity checking on the session data. We should never actually get into a state where this code will run, it's here Just In Case.
+
+[code language="javascript"]
+// POST /verify-tfa/
+router.post('/', (req, res, next) => {
+  var data = buildData(req);
+  User.findByUsername(req.session.username)
+  .then((user) => {
+    data.opts.user = user;
+    if (req.session.username === undefined) {
+      data.opts.errorNoUsername = true;
+      res.render('verify_tfa.pug', data);
+    } else if (req.session.stage !== 'password-validated') {
+      data.opts.errorUnverifiedPassword = true;
+      res.render('verify_tfa.pug', data);
+    } else {
+      // ...
+    }
+  }
+})
+[/code]
+
+If we reach out to the else statement, we check to see if the user submitted a token, and if that token is valid for the user. If the token is valid, log the user in and send them to their user page! Otherwise, if the token wasn't valid, ask the user to enter their token again.
+
+[code language="javascript"]
+// ...
+    else {
+      var token = req.body.token;
+      if (token && user.validateToken(token)) {
+        req.session.user = user;
+        req.session.stage = 'logged-in';
+        res.redirect('/user/');
+      } else {
+        data.opts.errorInvalidToken = true;
+        res.render('verify_tfa.pug', data);
+      }
+    }
+// ...
+[/code]
+
+<h3>Adding Google Authenticator</h3>
+Now that we have code to add TOTP authentication to the login process, let's take a look at how we'll get our users to enable TOTP authentication on their account.
+
+Keep in mind that you don't have to use Google Authenticator for this to work. TOTP is an IETF standard and has many different <a href="http://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm#Client_Implementations">client implementations</a>.
+
+I'm using Google Authenticator in this example because it seems to be the most widely used TOTP client at this time. Let's get started.
+
+Here is the basic overview of how this part works:
+<ul>
+  <li>The user visits a page to add Google Authenticator to their account.</li>
+  <li>The page contains a QR code that the user scans with Google Authenticator.</li>
+  <li>After scanning the QR code, the user will enter the 6 digit token that Google Authenticator displays</li>
+</ul>
+This is what the page will look like: <img src="http://www.twilio.com/blog/wp-content/uploads/2013/04/enable-google-authenticator.png" alt="" />
+
+And here is the code that handles takes the 6 digit token and adds it to the user's account.
+
+<a href="">https://github.com/TwilioDevEd/blog-tfa-node/blob/master/routes/enable-tfa-via-app-route.js</a>
+[code language="javascript"]
+//...
+// GET /enable-tfa-via-app/
+router.get('/', loginRequired, (req, res, next) => {
+  var data = buildData(req);
+  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
+  res.render('enable_tfa_via_app.pug', data);
+});
+
+// POST /enable-tfa-via-app/
+router.post('/', loginRequired, (req, res, next) => {
+  var data = buildData(req);
+  data.opts.qrcodeUri = User.qrcodeUri(data.opts.user);
+  var token = req.body.token;
+  User.findByUsername(data.opts.user.username)
+  .then((user) => {
+    if (token && user.validateToken(token)) {
+      User.update({username: user.username}, {totp_enabled_via_app: true})
+      .then((updatedUser) => {
+        req.session.user.totp_enabled_via_app = true;
+        data.opts.user = req.session.user;
+        res.render('enable_tfa_via_app.pug', data);
+      })
+      .catch((updateErr) => next(updateErr));
+    } else {
+      data.opts.tokenError = true;
+      res.render('enable_tfa_via_app.pug', data);
+    }
+  })
+  .catch((err) => next(err));
+});
+// ...
+[/code]
+
+By this point, you should be familiar with the first part of this function.
+
+Starting on the <i>if</i> statement, we check to see if the token that the user entered is valid, this is an important step that makes sure that the user set up Google Authenticator correctly.
+
+Once we know that the token is valid, we update a flag on the user's account and save the update. The details of how this data is persisted will differ from application to application, so we don't cover those details in this tutorial.
+
+If there was an error with the token, notify the user and ask them to try again.
+
+Finally, I wanted to show you how I generate the QR code. I'm generating my own QR code to avoid sending the shared secret to another service and reduce the risk of leaking the shared secret in a plaintext string.
+
+Each account in Google Authenticator has an account name, so in this section we create a globally unique name for our user and then have our totp object make us an image with the QR code that will contain that account name and the TOTP shared secret for that account.
+
+The object that the ".qrcode()" method can only write the image to a file. So here, we create a "StringIO", a file-like object in memory, to write to. We write the image to that object and then send the contents over the wire.
+
+<a href="https://github.com/TwilioDevEd/blog-tfa-node/blob/master/routes/auth-qr-code-png-route.js">auth qr code module</a>
+[code language="javascript"]
+// GET /auth-qr-code.png/
+router.get('/', loginRequired, (req, res, next) => {
+  User.findByUsername(req.session.user.username)
+  .then((user) => {
+    var encoded = base32.encode(user.totp_secret);
+    var encodedForGoogle = encoded.toString().replace(/=/g,'');
+    var otpauthUrl = `otpauth://totp/${user.username}?secret=${encodedForGoogle}`;
+    var code = qr.image(otpauthUrl, { type: 'png', ec_level: 'H', size: 10, margin: 0 });
+    res.setHeader('Content-type', 'image/png');
+    code.pipe(res);
+  });
+});
+[/code]
+
+As I noted earlier, I'm glossing over several things here. I'm not showing you how I persist the user objects and I'm not showing you the HTML that gets sent to the user. If you're wondering what those look like, take a look at the full source over here: <a href="https://github.com/jpf/Twilio-TFA">https://github.com/TwilioDevEd/blog-tfa-node</a>
+
+<h3>Adding Twilio</h3>
+Once we've added support for Google Authenticator, it's just a small additional step to give our users the ability to receive TOTP tokens on their phones via SMS. The procedure for adding SMS based two-factor authentication is very similar to adding support for Google Authenticator. The main difference is that instead of having our users scan a QR code, we have them enter in their mobile phone number.
+
+Here is what this page looks like:
+<img src="http://www.twilio.com/blog/wp-content/uploads/2013/04/enable-twilio-sms.png" alt="" />
+
+And here is the code that powers the page above.
+
+[code language="javascript"]
+'use strict';
+
+var express = require('express')
+  , router = express.Router()
+  , User = require('../models/user')
+  , sendSms = require('../lib/sms-sender')
+  , loginRequired = require('../lib/login-required')
+  , buildData = require('../lib/build-data');
+
+// GET /enable-tfa-via-sms/
+router.get('/', loginRequired, (req, res, next) => {
+  var data = buildData(req);
+  res.render('enable_tfa_via_sms.pug', data);
+});
+
+// POST //enable-tfa-via-sms/
+router.post('/', loginRequired, (req, res, next) => {
+  var data = buildData(req);
+  var phoneNumber = req.body.phone_number;
+  var token = req.body.token;
+
+  User.findByUsername(data.opts.user.username)
+  .then((user) => {
+    if (phoneNumber) {
+      user.phone_number = phoneNumber;
+      user.save()
+      .then((updatedUser) => {
+        sendSms(user.username, (sentSmsUser, smsSent) => {
+          data.opts.user = sentSmsUser;
+          data.opts.smsSent = smsSent;
+          data.opts.phone_number_updated = true;
+          res.render('enable_tfa_via_sms.pug', data);
+        });
+      })
+      .catch((err) => next(err));
+    } else if (token && user.validateToken(token)) {
+      user.totp_enabled_via_sms = true;
+      user.save((err, result) => {
+        data.opts.user = user;
+        req.session.user = user;
+        res.render('enable_tfa_via_sms.pug', data);
+      });
+    } else {
+      data.opts.tokenError = true;
+      res.render('enable_tfa_via_sms.pug', data);
+    }
+  })
+  .catch((err) => next(err));
+});
+
+module.exports = router;
+[/code]
+
+In this code, we check to see if we got a phone number in the "POST" request.
+
+If so, we take the phone number and send an SMS with the TOTP code to that phone number. We store the results of the SMS sending method in an option called "<i>smsSent</i>", if the SMS sending method returns "false" then the HTML template will display an error to the user saying that the phone number was invalid.
+
+Assuming that previous section of code worked, the user should have received an SMS with their TOTP code and then entered that code into the page. In this part of the code, we check to see if we were give a token and see if that token is valid. If the token is valid, we enable two-factor authentication for this account and save that setting. As I said in the section on adding Google Authenticator, the details of how to persist the user settings will be unique to your situation, so I don't cover that here. If there was an error validating the token, then we notify the user of that error via a flag that will be checked by our HTML template.
+<h3>Summary</h3>
+In this article, we showed you an example of a simple web application written in Node.js/Express. We showed you how to add two-factor authentication to that application, Finally, we showed you how you would enable your users to use Google Authenticator or SMS to authenticate to that modified application.
+
+What I didn't cover is the HTML that I used in this example or how I saved the user data.
+
+To really understand what is going on, I suggest that you try out the example I have running online and then look at the code.
+<h3>Try it out yourself</h3>
+If you want to see what this all looks like, here is a copy of the code running online for you to try out: <a href="http://twilio-tfa.herokuapp.com">http://twilio-tfa.herokuapp.com</a>
+
+All of the source code for this example is also available on GitHub: <a href="https://github.com/TwilioDevEd/blog-tfa-node">https://github.com/TwilioDevEd/blog-tfa-node</a>
+
+Thanks for reading.
+
+Please let me know if you have any additional questions, feedback or patches.

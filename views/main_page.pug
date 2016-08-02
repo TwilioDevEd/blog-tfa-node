@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  .container
+    .row
+      .span6
+        div This is a demonstration of how to add TOTP based Two-Factor Authentication to an existing application.
+        <!-- Source: -->
+        <!-- http://openclipart.org/detail/34273/tango-system-lock-screen-by-warszawianka -->
+        img(src='/static/img/locked-screen.png')
+      .span6
+        if opts.invalidUsernameOrPassword
+          .alert.alert-error
+            button.close(type='button', data-dismiss='alert') &times;
+            | Incorrect Username or Password
+        form(method='POST')
+          fieldset
+            label Username
+            input(type='text', name='username')
+            label Password
+            input(type='password', name='password')
+            br
+            button.btn(type='submit') Log in
+        .well
+          div
+            h1 Don't have an account?
+          a.btn(href='/sign-up') Sign up for an account here
