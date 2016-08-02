@@ -48,7 +48,7 @@ describe('default route', () => {
 
 describe('sign in', () => {
     
-  describe('with badpassword', () => {
+  describe('with bad password', () => {
     it('responds with alert Incorrect Username or Password', (done) => {
       testSession
         .post('/')
