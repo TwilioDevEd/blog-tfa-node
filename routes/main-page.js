@@ -24,15 +24,13 @@ router.post('/', (req, res, next) => {
         if (!isValid) {
           data.opts.invalidUsernameOrPassword = true;
           res.render('main_page.pug', data);
+        } else if (user.totpEnabledViaSms || user.totpEnabledViaApp) {
+          req.session.username = user.username;
+          req.session.stage = 'password-validated';
+          res.redirect('/verify-tfa/');
         } else {
-          if (user.totpEnabledViaSms || user.totpEnabledViaApp) {
-            req.session.username = user.username;
-            req.session.stage = 'password-validated';
-            res.redirect('/verify-tfa/');
-          } else {
-            req.session.user = user;
-            res.redirect('/user/');
-          }
+          req.session.user = user;
+          res.redirect('/user/');
         }
       });
     }

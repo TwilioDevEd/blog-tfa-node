@@ -28,14 +28,14 @@ app.use(session({
   saveUninitialized: true
 }));
 
-app.use('/', require('./routes/main-page-route'));
-app.use('/enable-tfa-via-app/', require('./routes/enable-tfa-via-app-route'));
-app.use('/enable-tfa-via-sms/', require('./routes/enable-tfa-via-sms-route'));
-app.use('/logout/', require('./routes/logout-route'));
-app.use('/sign-up/', require('./routes/sign-up-route'));
-app.use('/user/', require('./routes/user-route'));
-app.use('/verify-tfa/', require('./routes/verify-tfa-route'));
-app.use('/auth-qr-code.png/', require('./routes/auth-qr-code-png-route'));
+app.use('/', require('./routes/main-page'));
+app.use('/enable-tfa-via-app/', require('./routes/enable-tfa-via-app'));
+app.use('/enable-tfa-via-sms/', require('./routes/enable-tfa-via-sms'));
+app.use('/logout/', require('./routes/logout'));
+app.use('/sign-up/', require('./routes/sign-up'));
+app.use('/user/', require('./routes/user'));
+app.use('/verify-tfa/', require('./routes/verify-tfa'));
+app.use('/auth-qr-code.png/', require('./routes/auth-qr-code-png'));
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
