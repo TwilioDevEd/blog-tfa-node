@@ -16,13 +16,13 @@ block content
         div
           p
             | For apps like "Google Authenticator".
-            if opts.user.totp_enabled_via_app
+            if opts.user.totpEnabledViaApp
               br
               | (Enabled)
         a.btn(href='/enable-tfa-via-sms') Enable SMS based authentication
         div
           p
-            | For any phone that can recieve SMS messages.
-            if opts.user.totp_enabled_via_sms
+            | For any phone that can receive SMS messages.
+            if opts.user.totpEnabledViaSms
               br
-              | (Enabled for #{opts.user.phone_number})
+              | (Enabled for #{opts.user.phoneNumber})

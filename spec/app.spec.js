@@ -381,7 +381,7 @@ describe('enable tfa via app', () => {
             testSession
             .post('/enable-tfa-via-app')
             .send({
-              token: new totp.TotpAuth(result.totp_secret).generate()
+              token: new totp.TotpAuth(result.totpSecret).generate()
             })
             .end((err2, res2) => {
               expect(res2.statusCode).to.equal(200);
@@ -433,7 +433,7 @@ describe('enable tfa via sms', () => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
-            'phone_number': '+14155551212'
+            'phoneNumber': '+14155551212'
           })
           .end((err2, res2) => {
             expect(res2.statusCode).to.equal(200);
@@ -460,7 +460,7 @@ describe('enable tfa via sms', () => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
-            'phone_number': 'FAKE'
+            'phoneNumber': 'FAKE'
           })
           .end((err2, res2) => {
             expect(res2.statusCode).to.equal(200);
@@ -483,7 +483,7 @@ describe('enable tfa via sms', () => {
           testSession
           .post('/enable-tfa-via-sms')
           .send({
-            'phone_number': '+14155551212'
+            'phoneNumber': '+14155551212'
           })
           .end((err2, res2) => {
             //TODO improve this test using spy

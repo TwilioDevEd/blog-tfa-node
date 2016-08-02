@@ -16,25 +16,25 @@ router.get('/', loginRequired, (req, res, next) => {
 // POST //enable-tfa-via-sms/
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
-  var phoneNumber = req.body.phone_number;
+  var phoneNumber = req.body.phoneNumber;
   var token = req.body.token;
 
   User.findByUsername(data.opts.user.username)
   .then((user) => {
     if (phoneNumber) {
-      user.phone_number = phoneNumber;
+      user.phoneNumber = phoneNumber;
       user.save()
       .then((updatedUser) => {
         sendSms(user.username, (sentSmsUser, smsSent) => {
           data.opts.user = sentSmsUser;
           data.opts.smsSent = smsSent;
-          data.opts.phone_number_updated = true;
+          data.opts.phoneNumber_updated = true;
           res.render('enable_tfa_via_sms.pug', data);
         });
       })
       .catch((err) => next(err));
     } else if (token && user.validateToken(token)) {
-      user.totp_enabled_via_sms = true;
+      user.totpEnabledViaSms = true;
       user.save((err, result) => {
         data.opts.user = user;
         req.session.user = user;

@@ -19,9 +19,9 @@ block content
             | There was an error verifying your token. Please try again.
         p Please enter you verification code from:
         ul
-          if opts.user.totp_enabled_via_sms
+          if opts.user.totpEnabledViaSms
             li The SMS that was just sent to you
-          if opts.user.totp_enabled_via_app
+          if opts.user.totpEnabledViaApp
             li Google Authenticator
       form(method='POST')
         fieldset
@@ -31,5 +31,5 @@ block content
           button.btn(type='submit') Submit
       div
         p
-          if opts.user.totp_enabled_via_sms
+          if opts.user.totpEnabledViaSms
             a(href='/verify-tfa') Send me an SMS with my verification code again.

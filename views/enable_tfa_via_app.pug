@@ -10,7 +10,7 @@ block content
         .alert.alert-error
           button(type='button', class='close', data-dismiss='alert') &times;
           | There was an error verifying your token. Please try again.
-      if opts.user['totp_enabled_via_app']
+      if opts.user.totpEnabledViaApp
         .alert.alert-success
           button(type='button', class='close', data-dismiss='alert') &times;
           | You are set up for Two-Factor Authentication via Google Authenticator!

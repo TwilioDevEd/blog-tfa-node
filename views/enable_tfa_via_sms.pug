@@ -21,7 +21,7 @@ block content
         .alert.alert-error
           button(type='button', class='close', data-dismiss='alert') &times;
             | There was an error verifying your token. Please try again.
-      if opts.user['totp_enabled_via_sms']
+      if opts.user.totpEnabledViaSms
         .alert.alert-success
           button(type='button', class='close', data-dismiss='alert') &times;
           | You are set up for Two-Factor Authentication via Twilio SMS!
@@ -36,7 +36,7 @@ block content
         form(method='POST')
           formset
             label Your mobile phone number:
-            input(type='text', name='phone_number', placeholder='(415) 555-1212')
+            input(type='text', name='phoneNumber', placeholder='(415) 555-1212')
             button.btn(type='submit') Send verification code
             a.btn(href='/user') Cancel
             label Enter your verification code:

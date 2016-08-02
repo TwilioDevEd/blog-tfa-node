@@ -25,7 +25,7 @@ router.post('/', (req, res, next) => {
           data.opts.invalidUsernameOrPassword = true;
           res.render('main_page.pug', data);
         } else {
-          if (user.totp_enabled_via_sms || user.totp_enabled_via_app) {
+          if (user.totpEnabledViaSms || user.totpEnabledViaApp) {
             req.session.username = user.username;
             req.session.stage = 'password-validated';
             res.redirect('/verify-tfa/');

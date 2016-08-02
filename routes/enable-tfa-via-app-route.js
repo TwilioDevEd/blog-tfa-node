@@ -19,9 +19,9 @@ router.post('/', loginRequired, (req, res, next) => {
   User.findByUsername(data.opts.user.username)
   .then((user) => {
     if (token && user.validateToken(token)) {
-      User.update({username: user.username}, {totp_enabled_via_app: true})
+      User.update({username: user.username}, {totpEnabledViaApp: true})
       .then((updatedUser) => {
-        req.session.user.totp_enabled_via_app = true;
+        req.session.user.totpEnabledViaApp = true;
         data.opts.user = req.session.user;
         res.render('enable_tfa_via_app.pug', data);
       })

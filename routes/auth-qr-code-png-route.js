@@ -11,7 +11,7 @@ var express = require('express')
 router.get('/', loginRequired, (req, res, next) => {
   User.findByUsername(req.session.user.username)
   .then((user) => {
-    var encoded = base32.encode(user.totp_secret);
+    var encoded = base32.encode(user.totpSecret);
     var encodedForGoogle = encoded.toString().replace(/=/g,'');
     var otpauthUrl = `otpauth://totp/${user.username}?secret=${encodedForGoogle}`;
     var code = qr.image(otpauthUrl, { type: 'png', ec_level: 'H', size: 10, margin: 0 });
