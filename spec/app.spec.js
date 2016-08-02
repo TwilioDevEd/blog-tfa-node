@@ -37,7 +37,7 @@ describe('default route', () => {
           expect($('button.btn').text()).to.equal('Log in');
           expect($('a.btn').text()).to.contain('Sign up');
           var text = 'This is a demonstration of how to add TOTP based ' +
-                      'Two-Factor Authentication to an existing application.';
+                     'Two-Factor Authentication to an existing application.';
           expect($('.span6 div').first().text()).to.equal(text);
         })
       .expect(200, done);
