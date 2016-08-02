@@ -13,7 +13,7 @@ router.get('/', loginRequired, (req, res, next) => {
   res.render('enable_tfa_via_sms.pug', data);  
 });
 
-// POST //enable-tfa-via-sms/
+// POST /enable-tfa-via-sms/
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   var phoneNumber = req.body.phoneNumber;
