@@ -819,7 +819,8 @@ router.get('/', loginRequired, (req, res, next) => {
 });
 [/code]
 
-As I noted earlier, I'm glossing over several things here. I'm not showing you how I persist the user objects and I'm not showing you the HTML that gets sent to the user. If you're wondering what those look like, take a look at the full source over here: <a href="https://github.com/jpf/Twilio-TFA">https://github.com/TwilioDevEd/blog-tfa-node</a>
+As I noted earlier, I'm glossing over several things here. I'm not showing you how I persist the user objects and I'm not showing you the HTML that gets sent to the user. If you're wondering what those look like, take a look at the full source over here: <a href="https://github.com/TwilioDevEd/blog-tfa-node">https://github.com/TwilioDevEd/blog-tfa-node</a>
+
 <h3>Adding Twilio</h3>
 Once we've added support for Google Authenticator, it's just a small additional step to give our users the ability to receive TOTP tokens on their phones via SMS. The procedure for adding SMS based two-factor authentication is very similar to adding support for Google Authenticator. The main difference is that instead of having our users scan a QR code, we have them enter in their mobile phone number.
 
