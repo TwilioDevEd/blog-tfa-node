@@ -3,7 +3,7 @@
 var express = require('express')
   , router = express.Router();
 
-// GET /logout/
+// GET /logout
 router.get('/', (req, res, next) => {
   req.session.destroy((err) => res.redirect('/'));
 });

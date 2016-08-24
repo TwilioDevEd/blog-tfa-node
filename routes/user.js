@@ -5,7 +5,7 @@ var express = require('express')
   , loginRequired = require('../lib/login-required')
   , buildData = require('../lib/build-data');
 
-// GET /user/
+// GET /user
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   res.render('user.pug', data);

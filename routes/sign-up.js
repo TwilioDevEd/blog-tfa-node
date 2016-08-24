@@ -5,13 +5,13 @@ var express = require('express')
   , User = require('../models/user')
   , buildData = require('../lib/build-data');
 
-// GET /sign-up/
+// GET /sign-up
 router.get('/', (req, res, next) => {
   var data = buildData(req);
   res.render('sign_up.pug', data);
 });
 
-// POST /sign-up/
+// POST /sign-up
 router.post('/', (req, res, next) => {
   var data = buildData(req);
   User.findByUsername(req.body.username)
