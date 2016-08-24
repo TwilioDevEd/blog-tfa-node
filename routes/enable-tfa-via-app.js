@@ -7,7 +7,7 @@ var express = require('express')
   , buildData = require('../lib/build-data');
 
 // GET /enable-tfa-via-app
-router.get('/', loginRequired, (req, res, next) => {
+router.get('/', loginRequired, (req, res) => {
   var data = buildData(req);
   res.render('enable_tfa_via_app.pug', data);
 });

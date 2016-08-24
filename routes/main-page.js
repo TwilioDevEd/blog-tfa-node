@@ -6,13 +6,13 @@ var express = require('express')
   , buildData = require('../lib/build-data');
 
 // GET /
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   var data = buildData(req);
   res.render('main_page.pug', data);
 });
 
 // POST /
-router.post('/', (req, res, next) => {
+router.post('/', (req, res) => {
   User.findByUsername(req.body.username)
   .then((user) => {
     var data = buildData(req);

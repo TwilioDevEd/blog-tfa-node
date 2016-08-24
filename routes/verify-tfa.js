@@ -7,7 +7,7 @@ var express = require('express')
   , buildData = require('../lib/build-data');
 
 // GET /verify-tfa
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   var data = buildData(req);
   sendSms(req.session.username, (user, smsSent) => {
     data.opts.sms_sent = smsSent;

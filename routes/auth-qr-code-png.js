@@ -8,7 +8,7 @@ var express = require('express')
   , qr = require('qr-image');
 
 // GET /auth-qr-code.png
-router.get('/', loginRequired, (req, res, next) => {
+router.get('/', loginRequired, (req, res) => {
   User.findByUsername(req.session.user.username)
   .then((user) => {
     var encoded = base32.encode(user.totpSecret);
