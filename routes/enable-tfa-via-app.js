@@ -6,13 +6,13 @@ var express = require('express')
   , loginRequired = require('../lib/login-required')
   , buildData = require('../lib/build-data');
 
-// GET /enable-tfa-via-app/
+// GET /enable-tfa-via-app
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   res.render('enable_tfa_via_app.pug', data);
 });
 
-// POST /enable-tfa-via-app/
+// POST /enable-tfa-via-app
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   var token = req.body.token;

@@ -7,7 +7,7 @@ var express = require('express')
   , base32 = require('thirty-two')
   , qr = require('qr-image');
 
-// GET /auth-qr-code.png/
+// GET /auth-qr-code.png
 router.get('/', loginRequired, (req, res, next) => {
   User.findByUsername(req.session.user.username)
   .then((user) => {

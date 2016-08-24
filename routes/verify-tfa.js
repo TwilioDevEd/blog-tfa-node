@@ -6,7 +6,7 @@ var express = require('express')
   , sendSms = require('../lib/sms-sender')
   , buildData = require('../lib/build-data');
 
-// GET /verify-tfa/
+// GET /verify-tfa
 router.get('/', (req, res, next) => {
   var data = buildData(req);
   sendSms(req.session.username, (user, smsSent) => {
@@ -16,7 +16,7 @@ router.get('/', (req, res, next) => {
   });
 });
 
-// POST /verify-tfa/
+// POST /verify-tfa
 router.post('/', (req, res, next) => {
   var data = buildData(req);
   User.findByUsername(req.session.username)

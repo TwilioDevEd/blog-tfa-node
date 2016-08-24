@@ -7,13 +7,13 @@ var express = require('express')
   , loginRequired = require('../lib/login-required')
   , buildData = require('../lib/build-data');
 
-// GET /enable-tfa-via-sms/
+// GET /enable-tfa-via-sms
 router.get('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   res.render('enable_tfa_via_sms.pug', data);  
 });
 
-// POST /enable-tfa-via-sms/
+// POST /enable-tfa-via-sms
 router.post('/', loginRequired, (req, res, next) => {
   var data = buildData(req);
   var phoneNumber = req.body.phoneNumber;
