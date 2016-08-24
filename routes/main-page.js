@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /
-router.post('/', (req, res) => {
+router.post('/', (req, res, next) => {
   User.findByUsername(req.body.username)
   .then((user) => {
     var data = buildData(req);
