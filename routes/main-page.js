@@ -6,7 +6,7 @@ var express = require('express')
   , buildData = require('../lib/build-data');
 
 // GET /
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   var data = buildData(req);
   res.render('main_page.pug', data);
 });
