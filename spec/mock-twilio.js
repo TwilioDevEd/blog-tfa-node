@@ -5,7 +5,7 @@ mockery.enable();
 mockery.warnOnUnregistered(false);
 mockery.registerMock('twilio', () => {
   return {
-    sms: {
+    api: {
       messages: {
         create: function(opts, callback) {
           if (opts.to === 'FAKE') {
